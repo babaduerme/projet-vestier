@@ -1,9 +1,10 @@
-const CACHE_NAME = "styleai-static-v18";
+const CACHE_NAME = "styleai-static-v20";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./wardrobe.html",
   "./outfits.html",
+  "./trip.html",
   "./login.html",
   "./404.html",
   "./css/base.css",
@@ -12,6 +13,7 @@ const STATIC_ASSETS = [
   "./css/pages/login.css",
   "./css/pages/wardrobe.css",
   "./css/pages/outfits.css",
+  "./css/pages/trip.css",
   "./css/pages/404.css",
   "./js/config.js",
   "./js/auth.js",
@@ -23,8 +25,13 @@ const STATIC_ASSETS = [
   "./js/wardrobe.js",
   "./js/weather.js",
   "./js/style-rules.js",
-  "./js/outfits.js",
+  "./js/styles.config.js",
+  "./js/style-utils.js",
   "./js/outfit-matcher.js",
+  "./js/outfit-generator.js",
+  "./js/trip-planner.js",
+  "./js/trip.js",
+  "./js/outfits.js",
   "./js/garment-classifier.js",
 ];
 

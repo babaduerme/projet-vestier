@@ -28,6 +28,29 @@ service cloud.firestore {
         && (!('colorConfidence' in data) || data.colorConfidence is string);
     }
 
+    function isValidTrip(data) {
+      return data.destination is string
+        && data.destination.size() > 0
+        && data.destination.size() <= 200
+        && data.startDate is string
+        && data.startDate.size() == 10
+        && data.endDate is string
+        && data.endDate.size() == 10
+        && data.styles is list
+        && data.styles.size() > 0
+        && data.styles.size() <= 5
+        && data.styles.hasOnly(['casual', 'chic', 'minimaliste', 'rock', 'streetwear'])
+        && data.pieceIds is list
+        && data.pieceIds.size() <= 30
+        && data.checkedPieceIds is list
+        && data.checkedPieceIds.size() <= 30
+        && data.weatherSnapshot is list
+        && data.weatherSnapshot.size() <= 21
+        && data.plan is map
+        && (!('maxPieces' in data) || data.maxPieces == null || (data.maxPieces is number && data.maxPieces >= 1 && data.maxPieces <= 30))
+        && (!('cabin' in data) || data.cabin is bool);
+    }
+
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
@@ -39,6 +62,12 @@ service cloud.firestore {
 
       match /outfits/{outfitId} {
         allow read, write: if isOwner(userId);
+      }
+
+      match /trips/{tripId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidTrip(request.resource.data);
+        allow delete: if isOwner(userId);
       }
 
       match /settings/{settingId} {

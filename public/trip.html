@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StyleAI - Mode valise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages/trip.css" />
+    <script src="js/theme.js?v=20261110-v18" defer></script>
+  </head>
+  <body class="trip-page">
+    <a class="skip-link" href="#main-content">Aller au contenu</a>
+
+    <nav class="navbar">
+      <a class="nav-brand" href="wardrobe.html"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.8 6.7L12 16.8l-6 3.7 1.8-6.7-5.3-4.4L9.4 9 12 2.5Z"/></svg></span>StyleAI</a>
+      <div class="nav-links">
+        <a href="wardrobe.html">Ma Garde-robe</a>
+        <a href="outfits.html">Mes Tenues</a>
+        <a href="trip.html" class="active" aria-current="page">Mode valise</a>
+      </div>
+      <div id="user-info">
+        <span id="user-display">Chargement...</span>
+        <button id="logout-btn" class="btn" type="button">Déconnexion</button>
+      </div>
+    </nav>
+
+    <main id="main-content" class="container trip-main">
+      <header class="trip-hero">
+        <p class="trip-kicker">Mode valise</p>
+        <h1>Le minimum de pièces, le maximum de tenues.</h1>
+        <p class="trip-intro">
+          Indique ton voyage : StyleAI choisit dans ta garde-robe les pièces qui
+          couvrent chaque jour, en réutilisant les mêmes hauts, bas et couches.
+          Toutes les tenues proposées passent le validateur de composition.
+        </p>
+      </header>
+
+      <div class="trip-layout">
+        <section class="trip-card trip-form-card" aria-labelledby="trip-form-title">
+          <h2 id="trip-form-title">Préparer le séjour</h2>
+          <form id="trip-form" novalidate>
+            <div class="trip-field">
+              <label for="trip-destination">Destination</label>
+              <input
+                type="text"
+                id="trip-destination"
+                name="destination"
+                placeholder="ex. Lisbonne, Portugal"
+                autocomplete="off"
+                required
+                aria-describedby="trip-destination-hint"
+              />
+              <p id="trip-destination-hint" class="trip-hint">
+                La météo sera récupérée pour cette ville sur la période du séjour.
+              </p>
+            </div>
+
+            <div class="trip-dates">
+              <div class="trip-field">
+                <label for="trip-start">Début du séjour</label>
+                <input type="date" id="trip-start" name="startDate" required />
+              </div>
+              <div class="trip-field">
+                <label for="trip-end">Fin du séjour</label>
+                <input type="date" id="trip-end" name="endDate" required />
+              </div>
+            </div>
+
+            <fieldset class="trip-field trip-fieldset">
+              <legend>Styles souhaités</legend>
+              <p class="trip-hint">Les styles sont alternés jour par jour, dans l'ordre de la liste.</p>
+              <div class="trip-style-grid">
+                <label class="trip-style-option">
+                  <input type="checkbox" name="trip-style" value="casual" checked />
+                  <span>Casual</span>
+                </label>
+                <label class="trip-style-option">
+                  <input type="checkbox" name="trip-style" value="chic" />
+                  <span>Chic</span>
+                </label>
+                <label class="trip-style-option">
+                  <input type="checkbox" name="trip-style" value="minimaliste" />
+                  <span>Minimaliste</span>
+                </label>
+                <label class="trip-style-option">
+                  <input type="checkbox" name="trip-style" value="rock" />
+                  <span>Rock</span>
+                </label>
+                <label class="trip-style-option">
+                  <input type="checkbox" name="trip-style" value="streetwear" />
+                  <span>Streetwear</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="trip-field trip-fieldset">
+              <legend>Capacité de la valise</legend>
+              <label class="trip-capacity-option">
+                <input type="radio" name="trip-capacity" value="cabin" checked />
+                <span>Valise cabine — 10 pièces maximum</span>
+              </label>
+              <label class="trip-capacity-option">
+                <input type="radio" name="trip-capacity" value="custom" />
+                <span>Limiter à</span>
+                <input
+                  type="number"
+                  id="trip-max-pieces"
+                  name="maxPieces"
+                  min="1"
+                  max="30"
+                  value="8"
+                  inputmode="numeric"
+                  aria-label="Nombre maximum de pièces"
+                  disabled
+                />
+                <span>pièces</span>
+              </label>
+            </fieldset>
+
+            <p id="trip-status" class="trip-status" role="status" aria-live="polite"></p>
+            <button type="submit" id="trip-generate-btn" class="btn btn-primary trip-submit">
+              Générer ma valise
+            </button>
+          </form>
+        </section>
+
+        <section class="trip-card trip-saved-card" aria-labelledby="saved-trips-title">
+          <div class="trip-saved-heading">
+            <h2 id="saved-trips-title">Mes valises</h2>
+            <span id="saved-trips-count" class="trip-count" aria-live="polite">0</span>
+          </div>
+          <p class="trip-hint">Rouvre une valise pour retrouver les pièces et les tenues prévues.</p>
+          <div id="saved-trips-list" class="saved-trips-list" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <section id="trip-results" class="trip-results hidden" aria-labelledby="trip-results-title" tabindex="-1">
+        <div class="trip-results-heading">
+          <div>
+            <p class="trip-kicker">Récapitulatif</p>
+            <h2 id="trip-results-title">Ta valise</h2>
+          </div>
+          <button type="button" id="trip-save-btn" class="btn btn-primary">Sauvegarder la valise</button>
+        </div>
+
+        <div id="trip-summary" class="trip-summary"></div>
+        <p id="trip-weather-warning" class="trip-warning hidden" role="status"></p>
+        <p id="trip-missing" class="trip-missing hidden" role="alert"></p>
+
+        <div class="trip-results-grid">
+          <section class="trip-card" aria-labelledby="trip-suitcase-title">
+            <div class="trip-section-heading">
+              <h3 id="trip-suitcase-title">Pièces de la valise</h3>
+              <span id="trip-piece-count" class="trip-count"></span>
+            </div>
+            <p class="trip-hint">Coche les pièces déjà rangées dans ta valise.</p>
+            <div id="trip-suitcase" class="trip-suitcase"></div>
+          </section>
+
+          <section class="trip-card" aria-labelledby="trip-days-title">
+            <div class="trip-section-heading">
+              <h3 id="trip-days-title">Tenues jour par jour</h3>
+              <span id="trip-combination-count" class="trip-count"></span>
+            </div>
+            <div id="trip-days" class="trip-days"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="js/trip.js"></script>
+  </body>
+</html>

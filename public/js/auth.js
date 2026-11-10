@@ -18,7 +18,7 @@ export async function logout() {
 
 /**
  * Normalise et harmonise la barre de navigation sur toutes les pages connectées.
- * @param {"wardrobe"|"outfits"|"index"} [activePage]
+ * @param {"wardrobe"|"outfits"|"trip"|"index"} [activePage]
  */
 export function setupNavbar(activePage) {
   // Détection automatique de la page courante si non spécifiée
@@ -26,6 +26,7 @@ export function setupNavbar(activePage) {
     const path = window.location.pathname.toLowerCase();
     if (path.includes("outfits")) activePage = "outfits";
     else if (path.includes("wardrobe")) activePage = "wardrobe";
+    else if (path.includes("trip")) activePage = "trip";
     else activePage = "index";
   }
 
@@ -35,7 +36,8 @@ export function setupNavbar(activePage) {
     const href = link.getAttribute("href") || "";
     const isCurrent =
       (activePage === "wardrobe" && href.includes("wardrobe")) ||
-      (activePage === "outfits" && href.includes("outfits"));
+      (activePage === "outfits" && href.includes("outfits")) ||
+      (activePage === "trip" && href.includes("trip"));
 
     link.classList.toggle("active", isCurrent);
     if (isCurrent) {
