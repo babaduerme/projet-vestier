@@ -269,6 +269,17 @@ test("une tenue IA sans base est corrigée avec une chemise ou un polo", () => {
   assert.equal(result.outfits[0].pieces.find((piece) => piece.slot === SLOTS.COUCHE).type, GARMENT_TYPES.PULL);
 });
 
+test("resolveChicOutfit ajoute un blouson quand il fait froid", () => {
+  const coldWardrobe = [
+    ...wardrobe,
+    { id: "blouson", name: "blouson noir", category: "manteau", colors: "noir" },
+  ];
+  const res = resolveChicOutfit(coldWardrobe, { weather: { min: 3, max: 8 } });
+  assert.equal(res.success, true);
+  assert.ok(res.pieces.some((piece) => piece.slot === SLOTS.VESTE));
+  assert.ok(res.pieces.some((piece) => piece.type === GARMENT_TYPES.VESTE || piece.type === GARMENT_TYPES.MANTEAU));
+});
+
 test("une réponse IA absente ou illisible renvoie « information manquante »", () => {
   const invalidJson = validateMatcherResponse("ceci n'est pas du JSON", wardrobe);
   assert.equal(invalidJson.ok, false);

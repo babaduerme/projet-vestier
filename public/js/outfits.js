@@ -153,6 +153,20 @@ function getWeatherForDay(dayKey, dayIndex) {
   return forecastList[dayIndex % forecastList.length] || null;
 }
 
+/**
+ * Garantit que la météo est chargée avant de composer les tenues.
+ * Sans cela, une génération lancée juste après l'ouverture de la page pouvait
+ * se faire avec une météo nulle et donc sans veste alors qu'il fait froid.
+ */
+async function ensureWeatherAvailable() {
+  if (getWeeklyWeatherList().length > 0) return;
+  try {
+    await loadWeatherForecast(getSavedWeatherLocation());
+  } catch (error) {
+    console.warn("[StyleAI] Météo indisponible avant génération :", error);
+  }
+}
+
 const WARDROBE_CATEGORIES = new Set([
   "haut",
   "bas",
@@ -751,6 +765,7 @@ async function generateSingleDayOutfit(dayKey) {
   }
 
   showToast(`Génération pour ${day.label}...`);
+  await ensureWeatherAvailable();
   const weather = getWeatherForDay(day.key, dayIndex);
   let newOutfit = null;
   let serverRejection = null;
@@ -880,6 +895,8 @@ async function generateWeeklyOutfitsReliable() {
   if (progressFill) progressFill.style.width = "0%";
   progressBar?.setAttribute("aria-valuenow", "0");
   if (generationStatus) generationStatus.textContent = "Génération en cours : 0/7 jour traité...";
+
+  await ensureWeatherAvailable();
 
   let previousDayPieces = [];
 

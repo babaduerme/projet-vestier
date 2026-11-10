@@ -217,16 +217,11 @@ export function getPieceSearchText(piece) {
 }
 
 /**
- * Déduit le type précis d'un vêtement d'après son libellé et/ou sa catégorie.
- * Priorise les mots-clés spécifiques (ex. "veste en jean" -> veste, "nœud papillon" -> noeud-papillon).
- * Si aucun mot-clé ne correspond, retourne "autre".
- * 
- * @param {string} name 
- * @param {string} [category=""] 
+ * Déduit le type précis d'un vêtement à partir d'un texte déjà normalisé.
+ * @param {string} text
  * @returns {string} Valeur de GARMENT_TYPES
  */
-export function detectGarmentType(name, category = "") {
-  const text = cleanText(`${name || ""} ${category || ""}`);
+function detectGarmentTypeFromText(text) {
   if (!text) return GARMENT_TYPES.AUTRE;
 
   // 1. Accessoires spécifiques (nœud papillon, cravate, sac, ceinture, écharpe)
@@ -315,6 +310,21 @@ export function detectGarmentType(name, category = "") {
 }
 
 /**
+ * Déduit le type précis d'un vêtement d'après son libellé, puis sa catégorie.
+ * Le nom est prioritaire : une "veste en jean" rangée dans "manteau" reste une
+ * veste, et un "blouson" rangé dans "manteau" reste un blouson.
+ *
+ * @param {string} name
+ * @param {string} [category=""]
+ * @returns {string} Valeur de GARMENT_TYPES
+ */
+export function detectGarmentType(name, category = "") {
+  const fromName = detectGarmentTypeFromText(cleanText(name));
+  if (fromName !== GARMENT_TYPES.AUTRE) return fromName;
+  return detectGarmentTypeFromText(cleanText(category));
+}
+
+/**
  * Extrait une couleur mentionnée dans le nom d'un vêtement
  * @param {string} name 
  * @returns {string|null}
@@ -379,7 +389,10 @@ export function resolveGarmentColors(garment, userExplicitColor = null) {
 export function migrateGarment(piece) {
   if (!piece) return null;
   const rawType = piece.type;
-  const type = (rawType && Object.values(GARMENT_TYPES).includes(rawType))
+  // Un ancien document marqué "autre" ne doit pas rester bloqué : on retente
+  // la classification depuis le nom et la catégorie. C'est ce qui permet à un
+  // blouson importé avant la correction d'être reconnu comme VESTE.
+  const type = (rawType && rawType !== GARMENT_TYPES.AUTRE && Object.values(GARMENT_TYPES).includes(rawType))
     ? rawType
     : detectGarmentType(piece.name, piece.category);
 

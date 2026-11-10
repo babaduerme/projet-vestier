@@ -1,6 +1,6 @@
 # TESTS.md — Cas de vérification et résultats
 
-Dix cas principaux, plus deux cas API bonus. Les cas automatisés sont exécutés
+Dix cas principaux, plus trois cas bonus. Les cas automatisés sont exécutés
 par `npm test`. Les cas navigateur sont marqués honnêtement « non exécuté »
 lorsqu'ils n'ont pas été joués dans cet environnement.
 
@@ -20,6 +20,7 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 | 10 | Hoodie interdit avec polo/chemise | Automatisé | Pass |
 | 11 | Chic et Minimaliste sans t-shirt | Automatisé | Pass |
 | 12 | API : payload invalide rejeté | Automatisé | Pass |
+| 13 | Blouson/veste ajouté par temps froid | Automatisé | Pass |
 
 ## Cas détaillés
 
@@ -113,12 +114,19 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 - **Attendu** : `400`, `error: "invalid_request"`, message sur `name`.
 - **Résultat** : Pass.
 
+### Cas 13 — Blouson/veste par temps froid
+
+- **Action** : composer une tenue Chic avec un blouson en garde-robe, à 3–8 °C.
+- **Attendu** : la tenue contient une pièce de slot `VESTE` (blouson ou manteau).
+- **Résultat** : Pass.
+- **Référence** : test « resolveChicOutfit ajoute un blouson quand il fait froid ».
+
 ## Commandes et résultats
 
 ```text
 npm test
-ℹ tests 68
-ℹ pass 68
+ℹ tests 70
+ℹ pass 70
 ℹ fail 0
 ```
 

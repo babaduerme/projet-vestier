@@ -14,7 +14,7 @@ ce que j'ai corrigé, et pourquoi. Les échecs sont conservés.
 | 7 | Compléter le CRUD | « Il manque la modification d'un vêtement. » | Correct | Ajout du bouton « Modifier », de `openEditModal`, de `updateDoc` et de `updatedAt`. Suppression du doublon de bouton de suppression. |
 | 8 | Sécuriser Firestore | « La validation doit être côté serveur, pas seulement dans le navigateur. » | Correct | `firestore.rules` valide les champs des vêtements et isole chaque utilisateur. |
 | 9 | Nettoyer le dépôt | « Aucun secret, aucun log dans le dépôt. » | Correct | `firebase-debug.log` retiré du suivi Git et ajouté au `.gitignore`. |
-| 10 | Vérifier | « Ajoute des tests et vérifie. » | Correct | 68 tests passent, dont 8 tests d'API. Les cas navigateur non exécutés sont marqués « information manquante » dans `TESTS.md`. |
+| 10 | Vérifier | « Ajoute des tests et vérifie. » | Correct | 70 tests passent, dont 8 tests d'API. Les cas navigateur non exécutés sont marqués « information manquante » dans `TESTS.md`. |
 
 ## Échecs analysés
 

@@ -119,6 +119,18 @@ test("C2 : Les anciennes pièces haut sont résolues par leur nom", () => {
   assert.equal(legacyTshirt.slot, SLOTS.BASE);
 });
 
+test("C2 bis : un ancien blouson stocké en type 'autre' est reclassé en veste", () => {
+  const legacyBlouson = migrateGarment({
+    id: "legacy-blouson",
+    name: "blouson noir",
+    category: "manteau",
+    type: "autre",
+    slot: null,
+  });
+  assert.equal(legacyBlouson.type, GARMENT_TYPES.VESTE);
+  assert.equal(legacyBlouson.slot, SLOTS.VESTE);
+});
+
 test("C3 : Le score de style classe sans éliminer les pièces sans tags", () => {
   assert.equal(scoreStyle({ type: GARMENT_TYPES.HOODIE, name: "hoodie noir" }, "rock"), 3);
   assert.ok(scoreStyle({ type: GARMENT_TYPES.TSHIRT, name: "t-shirt blanc" }, "casual") > 0);
