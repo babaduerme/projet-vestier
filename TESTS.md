@@ -1,6 +1,6 @@
 # TESTS.md — Cas de vérification et résultats
 
-Dix cas principaux, plus six cas bonus. Les cas automatisés sont exécutés
+Dix cas principaux, plus onze cas bonus. Les cas automatisés sont exécutés
 par `npm test`. Les cas navigateur sont marqués honnêtement « non exécuté »
 lorsqu'ils n'ont pas été joués dans cet environnement.
 
@@ -24,6 +24,11 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 | 14 | Streetwear sans polo ni chemise | Automatisé | Pass |
 | 15 | Chic avec cravate ou nœud papillon | Automatisé | Pass |
 | 16 | Choix caméra ou documents | Automatisé | Pass |
+| 17 | Valise minimale et réutilisation | Automatisé | Pass |
+| 18 | Valise : erreurs, limites et Streetwear | Automatisé | Pass |
+| 19 | Formulaire valise accessible | Automatisé | Pass |
+| 20 | Géocodage destination | Automatisé | Pass |
+| 21 | Météo filtrée sur la période | Automatisé | Pass |
 
 ## Cas détaillés
 
@@ -157,12 +162,51 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 - **Résultat** : Pass (structure HTML et branchement JS vérifiés).
 - **Référence** : `tests/wardrobe-upload.test.mjs`.
 
+### Cas 17 — Valise minimale et réutilisation
+
+- **Action** : planifier 5 jours Casual avec une garde-robe complète.
+- **Attendu** : chaque jour a une tenue valide, toutes les pièces de chaque tenue
+  sont dans la valise, au moins une pièce sert plusieurs jours.
+- **Résultat** : Pass.
+- **Référence** : `tests/trip-planner.test.mjs`.
+
+### Cas 18 — Valise : erreurs, limites et Streetwear
+
+- **Action** : tester l'absence de pull/chemise, une limite de pièces trop basse
+  et un séjour Streetwear avec un polo en garde-robe.
+- **Attendu** : messages précis, sélection refusée si la limite est dépassée,
+  aucun polo ni chemise dans la valise Streetwear.
+- **Résultat** : Pass.
+
+### Cas 19 — Formulaire valise accessible
+
+- **Action** : inspecter `trip.html` et `trip.js`.
+- **Attendu** : labels, fieldsets, styles, capacité, `aria-live`, liste des
+  valises, boutons Sauvegarder/Rouvrir/Supprimer et appels météo/planificateur.
+- **Résultat** : Pass.
+- **Référence** : `tests/trip-ui.test.mjs`.
+
+### Cas 20 — Géocodage destination
+
+- **Action** : géocoder « Lisbonne » avec une réponse Open-Meteo simulée.
+- **Attendu** : nom complet, pays et coordonnées.
+- **Résultat** : Pass.
+- **Référence** : `tests/trip-weather.test.mjs`.
+
+### Cas 21 — Météo filtrée sur la période
+
+- **Action** : demander les prévisions du 11 au 12 novembre sur une réponse
+  contenant quatre jours.
+- **Attendu** : seuls les deux jours du séjour sont retournés, avec températures
+  et pluie.
+- **Résultat** : Pass.
+
 ## Commandes et résultats
 
 ```text
 npm test
-ℹ tests 79
-ℹ pass 79
+ℹ tests 92
+ℹ pass 92
 ℹ fail 0
 ```
 

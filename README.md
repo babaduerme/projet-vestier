@@ -17,6 +17,8 @@ validation métier.
 - Générateur de tenues : règles métier déterministes, couche chaude obligatoire,
   compatibilité hoodie/pull, styles Casual, Chic, Minimaliste, Rock, Streetwear.
 - Planning hebdomadaire : un style par jour, météo, génération et sauvegarde.
+- Mode valise : destination, dates, styles, météo de la destination, sélection
+  minimale de pièces réutilisées, tenues jour par jour, sauvegarde et reprise.
 - API locale de validation métier et de composition formelle.
 - Tests automatisés avec `node:test`.
 
@@ -99,6 +101,9 @@ explicite.
 │   ├── js/
 │   │   ├── outfit-matcher.js   Règles métier et validateur déterministe
 │   │   ├── outfits.js          Planning et génération de tenues
+│   │   ├── outfit-generator.js Génération pure partagée (semaine + valise)
+│   │   ├── trip-planner.js     Sélection minimale de la valise
+│   │   ├── trip.js             Page mode valise et Firestore trips
 │   │   ├── wardrobe.js         CRUD de la garde-robe
 │   │   ├── api-client.js       Appel de l'API de validation
 │   │   ├── config.js           Configuration Firebase et Cloudinary
@@ -121,6 +126,8 @@ Les données sont stockées sous :
 - `users/{uid}/clothes/{clothId}` : vêtements.
 - `users/{uid}/outfits/currentWeek` : tenues de la semaine.
 - `users/{uid}/settings/weeklyStyles` : styles choisis par jour.
+- `users/{uid}/trips/{tripId}` : valises sauvegardées (destination, dates,
+  styles, pièces, cases cochées, météo).
 
 Les règles de `firestore.rules` limitent chaque utilisateur à ses propres données
 et valident les champs des vêtements côté serveur (Firestore).

@@ -11,6 +11,7 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
 | Serveur applicatif exposant une API, logique métier côté serveur | Conforme | `server.js` expose `/api/health`, `/api/outfits/validate`, `/api/outfits/check-wardrobe`, `/api/outfits/chic`, `/api/outfits/validate-response`. Il importe les règles métier de `outfit-matcher.js`. |
 | Base de données et données persistantes | Conforme | Firestore : `users/{uid}/clothes`, `outfits/currentWeek`, `settings/weeklyStyles`. |
 | CRUD complet sur au moins une entité | Conforme | Garde-robe : création, lecture, modification (bouton « Modifier » + `updateDoc`), suppression. |
+| Mode valise et sauvegarde des voyages | Conforme | `trip.html`, `trip.js`, `trip-planner.js`, collection `users/{uid}/trips`, règles Firestore dédiées. |
 | Validation des entrées côté serveur | Conforme | `server.js` valide types, longueurs, styles, météo. `firestore.rules` valide les vêtements avant écriture. |
 | Dépôt Git avec historique lisible | Conforme | Plusieurs commits de construction : cadrage documentaire, règles de tenues, API/CRUD, nettoyage du dépôt, conformité. |
 | README d'installation | Conforme | `README.md` : prérequis, `npm install`, `npm start`, tests, API, structure. |

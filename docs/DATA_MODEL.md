@@ -9,7 +9,8 @@ sous-arbre isolé :
 users/{uid}
 ├── clothes/{clothId}
 ├── outfits/currentWeek
-└── settings/weeklyStyles
+├── settings/weeklyStyles
+└── trips/{tripId}
 ```
 
 Il n'y a pas de collection globale partagée. Les règles de sécurité imposent
@@ -92,7 +93,31 @@ Chemin : `users/{uid}/settings/weeklyStyles`
 Le planning local utilise aussi `localStorage` pour un affichage immédiat avant
 la synchronisation Firestore.
 
-## 5. Relations
+## 5. Entité `trips` (valise sauvegardée)
+
+Chemin : `users/{uid}/trips/{tripId}`
+
+| Champ | Type | Contrainte |
+| --- | --- | --- |
+| `destination` | string | 1 à 200 caractères. |
+| `startDate` / `endDate` | string | Dates `YYYY-MM-DD`, séjour de 21 jours maximum. |
+| `styles` | array | 1 à 5 styles du catalogue. |
+| `maxPieces` | number \| null | 1 à 30, ou null si non limité. |
+| `cabin` | boolean | Valise cabine (10 pièces). |
+| `pieceIds` | array | IDs des pièces sélectionnées, 30 maximum. |
+| `checkedPieceIds` | array | IDs cochés « déjà dans la valise ». |
+| `weatherSnapshot` | array | `{ date, weather }` par jour. |
+| `plan` | map | Pièces, tenues jour par jour, compteurs et capacité. |
+| `createdAt` / `updatedAt` | timestamp | `serverTimestamp()`. |
+
+### Contraintes métier
+
+- Le plan est un snapshot : rouvrir une valise ne dépend pas d'une régénération.
+- Les IDs de pièces et les cases cochées sont séparés pour que l'état de
+  préparation de la valise soit persisté.
+- Les règles Firestore valident les champs racine et la taille des listes.
+
+## 6. Relations
 
 ```text
 Utilisateur Firebase 1 ─── N Vêtements
@@ -106,7 +131,7 @@ Tenue 1 ─── N Pièces (snapshot)
   reste possible même après modification ou suppression.
 - Aucune relation inter-utilisateurs.
 
-## 6. Règles de sécurité et validation
+## 7. Règles de sécurité et validation
 
 `firestore.rules` :
 
@@ -119,7 +144,7 @@ Tenue 1 ─── N Pièces (snapshot)
 La validation côté client reste présente pour l'expérience utilisateur, mais
 elle n'est pas la seule barrière : Firestore refuse une écriture non conforme.
 
-## 7. Volumétrie et évolution
+## 8. Volumétrie et évolution
 
 - Un utilisateur typique : 20 à 150 vêtements, 7 tenues.
 - Pagination de la garde-robe par pages de 6 à 8 éléments selon l'écran.

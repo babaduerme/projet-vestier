@@ -91,6 +91,8 @@ Le MVP ne dépend pas des Cloud Functions et ne nécessite pas de déploiement.
 | RF-13 | Messages | Une combinaison impossible affiche la pièce manquante précise. |
 | RF-14 | API | Les routes `/api/outfits/*` valident leurs entrées côté serveur. |
 | RF-15 | Validation Firestore | Une écriture de vêtement invalide est refusée par les règles. |
+| RF-16 | Mode valise | L'utilisateur saisit destination, dates, styles et capacité ; l'app sélectionne un minimum de pièces couvrant tous les jours. |
+| RF-17 | Sauvegarde valise | Les valises sont listées, rouvertes et supprimées sous `users/{uid}/trips`. |
 
 ## 7. Règles métier détaillées
 
@@ -128,6 +130,20 @@ Le MVP ne dépend pas des Cloud Functions et ne nécessite pas de déploiement.
 - Base autorisée : t-shirt ou débardeur uniquement.
 - Polo et chemise refusés comme base.
 - Couche chaude : pull ou hoodie, le hoodie restant réservé au t-shirt.
+
+### 7.6 Mode valise
+
+- L'utilisateur indique une destination, une date de début et de fin, un ou
+  plusieurs styles, et une capacité (cabine 10 pièces ou limite personnalisée).
+- La météo de la destination est récupérée sur la période avec Open-Meteo, la
+  même source que le planning hebdomadaire.
+- La sélection est un ensemble de pièces réutilisées entre les jours, pas une
+  tenue isolée par jour. L'objectif est de minimiser le nombre de pièces tout en
+  gardant un maximum de combinaisons valides.
+- Chaque tenue du récapitulatif est validée par `validateOutfit`. Une sélection
+  impossible est refusée avec la pièce manquante précise.
+- Les valises sauvegardées contiennent destination, dates, styles, IDs des
+  pièces, cases cochées et instantané météo.
 
 ## 8. Exigences non fonctionnelles
 

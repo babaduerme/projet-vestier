@@ -2,8 +2,8 @@
 
 ## Mission
 Application web de garde-robe personnelle : CRUD de vêtements, classification
-d'images, génération de tenues et planning hebdomadaire. Projet fil rouge
-« Coder à l'ère de l'IA » : application complète, terminée, explicable.
+d'images, génération de tenues, planning hebdomadaire et mode valise. Projet fil
+rouge « Coder à l'ère de l'IA » : application complète, terminée, explicable.
 
 ## Stack
 HTML/CSS/JavaScript ES modules, Firebase Auth + Firestore, Cloudinary pour les
@@ -18,6 +18,9 @@ images, Node natif pour le serveur/API, `node:test` pour les tests.
 ## Architecture
 - `public/js/outfit-matcher.js` : règles métier pures (types, slots, validation,
   réparation, résolveur Chic/Minimaliste, validation des réponses IA).
+- `public/js/outfit-generator.js` : génération pure partagée semaine + valise.
+- `public/js/trip-planner.js` : sélection minimale des pièces d'une valise.
+- `public/js/trip.js` : page mode valise, météo destination et Firestore trips.
 - `public/js/outfits.js` : planning, génération, verrou d'affichage final.
 - `public/js/wardrobe.js` : CRUD Firestore de la garde-robe (create/read/update/delete).
 - `server.js` : serveur HTTP, fichiers statiques, API de validation métier.
