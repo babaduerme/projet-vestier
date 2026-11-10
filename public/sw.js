@@ -1,4 +1,4 @@
-const CACHE_NAME = "styleai-static-v16";
+const CACHE_NAME = "styleai-static-v17";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

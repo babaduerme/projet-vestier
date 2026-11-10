@@ -247,7 +247,10 @@ async function serveStatic(request, response, pathname) {
     if (!fileStat.isFile()) throw new Error("not a file");
     const content = await readFile(filePath);
     const contentType = MIME_TYPES.get(extname(filePath).toLowerCase()) || "application/octet-stream";
-    const cacheControl = filePath.endsWith(".html") ? "no-cache" : "public, max-age=3600";
+    // Pas de cache HTTP pour le code applicatif : sinon le navigateur peut
+    // garder un ancien module après une correction (cravate, Streetwear, etc.).
+    const appCode = /\.(html|js|mjs|css|json)$/i.test(filePath);
+    const cacheControl = appCode ? "no-cache" : "public, max-age=3600";
     response.writeHead(200, {
       "Content-Type": contentType,
       "Content-Length": content.length,
