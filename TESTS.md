@@ -147,10 +147,13 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 
 ### Cas 16 — Choix caméra ou documents
 
-- **Action** : ouvrir la modale d'ajout de vêtement.
-- **Attendu** : deux boutons distincts, « Prendre une photo » et « Choisir une
-  image » ; le premier ouvre la caméra arrière sur mobile, le second le
-  sélecteur de fichiers. Les deux alimentent le même aperçu et la même analyse.
+- **Action** : ouvrir la modale d'ajout de vêtement, puis cliquer sur
+  « Prendre une photo » ou « Choisir une image ».
+- **Attendu** : « Prendre une photo » ouvre une modale avec le flux caméra
+  (`getUserMedia`), un bouton « Capturer » et un bouton « Annuler » ;
+  « Choisir une image » ouvre le sélecteur de documents. En cas de caméra
+  indisponible ou refusée, un message explicite et un repli vers les documents
+  sont proposés. Les deux alimentent le même aperçu et la même analyse.
 - **Résultat** : Pass (structure HTML et branchement JS vérifiés).
 - **Référence** : `tests/wardrobe-upload.test.mjs`.
 
@@ -158,8 +161,8 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 
 ```text
 npm test
-ℹ tests 78
-ℹ pass 78
+ℹ tests 79
+ℹ pass 79
 ℹ fail 0
 ```
 
