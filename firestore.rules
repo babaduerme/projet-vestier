@@ -18,8 +18,7 @@ service cloud.firestore {
         && data.type is string
         && data.type.size() <= 30
         && (data.slot == null || data.slot in ['BASE', 'COUCHE', 'VESTE', 'BAS', 'ROBE', 'CHAUSSURES', 'ACCESSOIRE'])
-        && data.pattern is string
-        && data.pattern.size() <= 30
+        && (!('pattern' in data) || (data.pattern is string && data.pattern.size() <= 30))
         && data.colors is string
         && data.colors.size() > 0
         && data.colors.size() <= 200
