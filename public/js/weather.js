@@ -338,6 +338,105 @@ export async function loadWeatherForecast(location = getSavedWeatherLocation()) 
 }
 
 /**
+ * Géocode une ville via Open-Meteo.
+ * @param {string} query
+ * @returns {Promise<{name: string, country: string, admin1: string, coordinates: {latitude: number, longitude: number}}|null>}
+ */
+export async function geocodeCity(query) {
+  const cleanQuery = String(query ?? "").trim();
+  if (!cleanQuery) return null;
+
+  const params = new URLSearchParams({
+    name: cleanQuery,
+    count: "1",
+    language: "fr",
+    format: "json",
+  });
+  const response = await fetchWithTimeout(
+    `https://geocoding-api.open-meteo.com/v1/search?${params}`,
+    {},
+    6500,
+  );
+  if (!response.ok) {
+    throw new Error(`Open-Meteo Geocoding HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  const result = data?.results?.[0];
+  if (!result) return null;
+
+  return {
+    name: [result.name, result.admin1, result.country].filter(Boolean).join(", "),
+    country: result.country || "",
+    admin1: result.admin1 || "",
+    coordinates: {
+      latitude: result.latitude,
+      longitude: result.longitude,
+    },
+  };
+}
+
+/**
+ * Récupère les prévisions quotidiennes pour une plage de dates.
+ * Open-Meteo forecast couvre aujourd'hui + 15 jours ; au-delà, la date est
+ * absente du résultat et le mode valise le signale.
+ *
+ * @param {{latitude: number, longitude: number}} coordinates
+ * @param {string} startDate YYYY-MM-DD
+ * @param {string} endDate YYYY-MM-DD
+ * @returns {Promise<Array<object>>}
+ */
+export async function fetchWeatherForDateRange(coordinates, startDate, endDate) {
+  if (!coordinates?.latitude || !coordinates?.longitude) {
+    throw new Error("Coordonnées météo manquantes");
+  }
+
+  const params = new URLSearchParams({
+    latitude: String(coordinates.latitude),
+    longitude: String(coordinates.longitude),
+    daily:
+      "temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code",
+    forecast_days: "16",
+    timezone: "auto",
+  });
+  const response = await fetchWithTimeout(
+    `https://api.open-meteo.com/v1/forecast?${params}`,
+    {},
+    8000,
+  );
+  if (!response.ok) {
+    throw new Error(`Open-Meteo Forecast HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  if (!data?.daily?.time || !Array.isArray(data.daily.time)) {
+    throw new Error("Format de réponse météo invalide");
+  }
+
+  return data.daily.time
+    .map((dateStr, index) => {
+      if (dateStr < startDate || dateStr > endDate) return null;
+      const min = Math.round(data.daily.temperature_2m_min[index] ?? 12);
+      const max = Math.round(data.daily.temperature_2m_max[index] ?? 18);
+      const rain = Math.round(data.daily.precipitation_probability_max?.[index] ?? 0);
+      const wind = Math.round(data.daily.wind_speed_10m_max?.[index] ?? 10);
+      const code = data.daily.weather_code?.[index] ?? 0;
+      const type = weatherType(code, wind);
+      return {
+        date: dateStr,
+        min,
+        max,
+        rain,
+        wind,
+        code,
+        type,
+        label: WEATHER_LABELS[type] || "Météo standard",
+        emoji: weatherEmoji(type),
+        iconSvg: weatherIconSvg(type),
+      };
+    })
+    .filter(Boolean);
+}
+
+/**
  * Recherche et applique une nouvelle ville
  */
 export async function selectWeatherCity() {
@@ -363,44 +462,14 @@ export async function selectWeatherCity() {
   }
 
   try {
-    const params = new URLSearchParams({
-      name: query,
-      count: "1",
-      language: "fr",
-      format: "json",
-    });
+    const newLocation = await geocodeCity(query);
 
-    const response = await fetchWithTimeout(
-      `https://geocoding-api.open-meteo.com/v1/search?${params}`,
-      {},
-      6500,
-    );
-
-    if (!response.ok) {
-      throw new Error(`Open-Meteo Geocoding HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    const result = data?.results?.[0];
-
-    if (!result) {
+    if (!newLocation) {
       if (cityWeatherStatus) {
         cityWeatherStatus.textContent = `Ville « ${query} » introuvable. Vérifie l'orthographe.`;
       }
       return;
     }
-
-    const formattedName = [result.name, result.admin1, result.country]
-      .filter(Boolean)
-      .join(", ");
-
-    const newLocation = {
-      name: formattedName,
-      coordinates: {
-        latitude: result.latitude,
-        longitude: result.longitude,
-      },
-    };
 
     await loadWeatherForecast(newLocation);
   } catch (error) {
