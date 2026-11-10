@@ -39,6 +39,9 @@ const emptyWardrobeAddBtn = document.getElementById("empty-wardrobe-add-btn");
 const closeBtns = document.querySelectorAll(".close-modal, .close-modal-btn");
 const uploadArea = document.getElementById("upload-area");
 const fileInput = document.getElementById("file-input");
+const cameraInput = document.getElementById("camera-input");
+const cameraTrigger = document.getElementById("camera-trigger");
+const galleryTrigger = document.getElementById("gallery-trigger");
 const imgPreview = document.getElementById("img-preview");
 const addClothForm = document.getElementById("add-cloth-form");
 const submitBtn = document.getElementById("submit-cloth-btn");
@@ -197,9 +200,10 @@ function openModal() {
     if (
       child.id !== "img-preview" &&
       child.id !== "file-input" &&
+      child.id !== "camera-input" &&
       child.id !== "ai-analyzing"
     ) {
-      child.style.display = "block";
+      child.style.display = "";
     }
   });
 }
@@ -227,15 +231,6 @@ function openEditModal(cloth) {
   if (cloth.imageUrl) {
     imgPreview.src = cloth.imageUrl;
     imgPreview.style.display = "block";
-    Array.from(uploadArea.children).forEach((child) => {
-      if (
-        child.id !== "img-preview" &&
-        child.id !== "file-input" &&
-        child.id !== "ai-analyzing"
-      ) {
-        child.style.display = "none";
-      }
-    });
   }
 }
 
@@ -250,7 +245,19 @@ function closeModal() {
 openModalBtn?.addEventListener("click", openModal);
 closeBtns.forEach((btn) => btn.addEventListener("click", closeModal));
 
-uploadArea?.addEventListener("click", () => {
+uploadArea?.addEventListener("click", (event) => {
+  // Les boutons « photo » et « image » gèrent leur propre sélecteur.
+  if (event.target.closest("button")) return;
+  fileInput.click();
+});
+
+cameraTrigger?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  cameraInput.click();
+});
+
+galleryTrigger?.addEventListener("click", (event) => {
+  event.stopPropagation();
   fileInput.click();
 });
 
@@ -309,46 +316,52 @@ async function analyzeUploadedImageWithClassifier(imgElement, version = analysis
   }
 }
 
-fileInput?.addEventListener("change", (e) => {
-  if (e.target.files && e.target.files[0]) {
-    analysisVersion += 1;
-    const currentAnalysisVersion = analysisVersion;
-    selectedFile = e.target.files[0];
+function handleSelectedImage(event) {
+  const input = event.currentTarget;
+  const file = event.target.files?.[0];
+  if (!file) return;
 
-    if (!selectedFile.type.startsWith("image/")) {
-      showToast("Sélectionne un fichier image valide.", "error");
-      selectedFile = null;
-      fileInput.value = "";
-      return;
-    }
+  analysisVersion += 1;
+  const currentAnalysisVersion = analysisVersion;
+  selectedFile = file;
 
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      showToast("L'image est trop grande (max 5MB)", "error");
-      selectedFile = null;
-      fileInput.value = "";
-      return;
-    }
-
-    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
-    previewObjectUrl = URL.createObjectURL(selectedFile);
-    Array.from(uploadArea.children).forEach((child) => {
-      if (
-        child.id !== "img-preview" &&
-        child.id !== "file-input" &&
-        child.id !== "ai-analyzing"
-      ) {
-        child.style.display = "none";
-      }
-    });
-
-    imgPreview.src = previewObjectUrl;
-    imgPreview.style.display = "block";
-
-    imgPreview.onload = () => {
-      analyzeUploadedImageWithClassifier(imgPreview, currentAnalysisVersion);
-    };
+  if (!selectedFile.type.startsWith("image/")) {
+    showToast("Sélectionne un fichier image valide.", "error");
+    selectedFile = null;
+    input.value = "";
+    return;
   }
-});
+
+  if (selectedFile.size > 5 * 1024 * 1024) {
+    showToast("L'image est trop grande (max 5MB)", "error");
+    selectedFile = null;
+    input.value = "";
+    return;
+  }
+
+  if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+  previewObjectUrl = URL.createObjectURL(selectedFile);
+  Array.from(uploadArea.children).forEach((child) => {
+    if (
+      child.id !== "img-preview" &&
+      child.id !== "file-input" &&
+      child.id !== "camera-input" &&
+      child.id !== "ai-analyzing"
+    ) {
+      child.style.display = "none";
+    }
+  });
+
+  imgPreview.src = previewObjectUrl;
+  imgPreview.style.display = "block";
+
+  imgPreview.onload = () => {
+    analyzeUploadedImageWithClassifier(imgPreview, currentAnalysisVersion);
+  };
+}
+
+fileInput?.addEventListener("change", handleSelectedImage);
+cameraInput?.addEventListener("change", handleSelectedImage);
 
 // Optimisation d'image (redimensionnement WebP avant upload)
 async function optimizeImageForUpload(file) {

@@ -1,6 +1,6 @@
 # TESTS.md — Cas de vérification et résultats
 
-Dix cas principaux, plus cinq cas bonus. Les cas automatisés sont exécutés
+Dix cas principaux, plus six cas bonus. Les cas automatisés sont exécutés
 par `npm test`. Les cas navigateur sont marqués honnêtement « non exécuté »
 lorsqu'ils n'ont pas été joués dans cet environnement.
 
@@ -23,6 +23,7 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 | 13 | Blouson/veste ajouté par temps froid | Automatisé | Pass |
 | 14 | Streetwear sans polo ni chemise | Automatisé | Pass |
 | 15 | Chic avec cravate ou nœud papillon | Automatisé | Pass |
+| 16 | Choix caméra ou documents | Automatisé | Pass |
 
 ## Cas détaillés
 
@@ -144,12 +145,21 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 - **Référence** : tests « Chic ajoute une cravate ou un nœud papillon » et
   « Chic n'ajoute pas de cravate avec un polo ».
 
+### Cas 16 — Choix caméra ou documents
+
+- **Action** : ouvrir la modale d'ajout de vêtement.
+- **Attendu** : deux boutons distincts, « Prendre une photo » et « Choisir une
+  image » ; le premier ouvre la caméra arrière sur mobile, le second le
+  sélecteur de fichiers. Les deux alimentent le même aperçu et la même analyse.
+- **Résultat** : Pass (structure HTML et branchement JS vérifiés).
+- **Référence** : `tests/wardrobe-upload.test.mjs`.
+
 ## Commandes et résultats
 
 ```text
 npm test
-ℹ tests 75
-ℹ pass 75
+ℹ tests 78
+ℹ pass 78
 ℹ fail 0
 ```
 

@@ -10,6 +10,7 @@ validation métier.
 
 - Authentification Firebase (connexion, inscription, déconnexion).
 - Garde-robe : création, consultation, modification et suppression de vêtements.
+- Ajout d'un vêtement par photo (caméra) ou par image choisie dans les documents.
 - Analyse d'image : classification du type de vêtement et extraction des couleurs
   dominantes (Transformers.js / CLIP, avec repli MobileNet).
 - Upload des photos vers Cloudinary.

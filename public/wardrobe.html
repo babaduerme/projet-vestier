@@ -85,9 +85,17 @@
             <form id="add-cloth-form">
                 <div class="upload-area" id="upload-area">
                     <div class="upload-icon">📷</div>
-                    <button type="button" class="upload-trigger">Clique pour ajouter une photo</button>
+                    <div class="upload-actions">
+                        <button type="button" class="upload-trigger upload-choice" id="camera-trigger">
+                            📷 Prendre une photo
+                        </button>
+                        <button type="button" class="upload-trigger upload-choice" id="gallery-trigger">
+                            🖼️ Choisir une image
+                        </button>
+                    </div>
                     <p class="u-inline-wardrobe-2">JPG, PNG (max 5MB)</p>
                     <input type="file" id="file-input" accept="image/*" class="u-inline-wardrobe-3">
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" class="u-inline-wardrobe-3">
                     <img id="img-preview" alt="Aperçu du vêtement sélectionné" width="200" height="200">
                     <div id="ai-analyzing" class="u-inline-wardrobe-4">
                         ✨ Analyse IA en cours (détection type & couleur)...

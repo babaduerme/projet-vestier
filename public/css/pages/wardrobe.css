@@ -433,6 +433,42 @@
   font-weight: 600;
 }
 
+.upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 4px 0 6px;
+}
+
+.upload-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--ui-line);
+  border-radius: 999px;
+  background: var(--ui-card);
+  color: var(--ui-ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.upload-choice:hover {
+  border-color: var(--ui-clay);
+  background: #f7eee4;
+  transform: translateY(-1px);
+}
+
+.upload-choice:focus-visible {
+  outline: 2px solid var(--ui-clay);
+  outline-offset: 2px;
+}
+
 #img-preview {
   max-width: 100%;
   max-height: 200px;

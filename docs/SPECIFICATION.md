@@ -82,7 +82,7 @@ Le MVP ne dépend pas des Cloud Functions et ne nécessite pas de déploiement.
 | RF-04 | Modification | Le bouton « Modifier » préremplit la modale et met à jour le document. |
 | RF-05 | Suppression | La suppression demande confirmation et retire le document. |
 | RF-06 | Persistance | Les données restent présentes après rechargement et redémarrage du serveur. |
-| RF-07 | Analyse d'image | La photo est classée par type/catégorie, l'utilisateur peut corriger. |
+| RF-07 | Analyse d'image | L'utilisateur choisit entre prendre une photo et sélectionner une image dans ses documents ; la photo est classée par type/catégorie et il peut corriger. |
 | RF-08 | Couche chaude | Toute tenue contient exactement un pull ou un hoodie. |
 | RF-09 | Hoodie | Un hoodie n'est accepté qu'avec un t-shirt dessous. |
 | RF-10 | Pull | Un pull est accepté avec chemise, polo, t-shirt ou robe. |
