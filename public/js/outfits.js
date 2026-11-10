@@ -1413,11 +1413,18 @@ function generateOutfits(
       }
       return true;
     });
+    const neckwearAvailable = safeAccessories.filter(isFormalNeckwear);
 
     if (isRockStyle && rockAccessories.length) {
       const accessory = rockAccessories[(offsetSeed + index) % rockAccessories.length];
       if (accessory && !pieces.some((p) => p.id === accessory.id)) {
         pieces.push(accessory);
+      }
+    } else if (isNeckwearStyle && hasChemise && neckwearAvailable.length) {
+      // Chic : cravate ou nœud papillon dès qu'une chemise est présente.
+      const neckwear = pickCandidate(neckwearAvailable, [], index);
+      if (neckwear && !pieces.some((p) => p.id === neckwear.id)) {
+        pieces.push(neckwear);
       }
     } else if (safeAccessories.length && index % 2 === 1) {
       const accessory = pickCandidate(safeAccessories, [], index);
@@ -1466,6 +1473,39 @@ function generateOutfits(
 }
 
 /**
+ * Ajoute visuellement une cravate ou un nœud papillon à une tenue Chic déjà
+ * sauvegardée, si la garde-robe en possède un et que la base est une chemise.
+ * Cela évite qu'une ancienne tenue Chic reste sans accessoire de cou.
+ */
+function withChicNeckwear(outfit, styleKey) {
+  if (styleKey !== "chic" || !Array.isArray(outfit.pieces) || outfit.pieces.length === 0) {
+    return outfit;
+  }
+  if (outfit.pieces.some(isFormalNeckwear)) return outfit;
+
+  const base = outfit.pieces.find((piece) => normalizeGarmentSlot(piece) === SLOTS.BASE);
+  if (!base || !isShirt(base)) return outfit;
+
+  const neckwear = userClothes.find(
+    (piece) =>
+      isFormalNeckwear(piece) &&
+      normalizeGarmentSlot(piece) === SLOTS.ACCESSOIRE,
+  );
+  if (!neckwear || outfit.pieces.some((piece) => piece.id === neckwear.id)) {
+    return outfit;
+  }
+
+  const candidate = {
+    ...outfit,
+    style: styleKey,
+    pieces: [...outfit.pieces, neckwear],
+  };
+  return validateOutfit(candidate, styleKey, outfit.weather || null).isValid
+    ? candidate
+    : outfit;
+}
+
+/**
  * Dernier verrou déterministe avant l'affichage : une tenue invalide est
  * réparée si possible, sinon transformée en carte d'erreur explicite. Une
  * tenue invalide n'est jamais rendue telle quelle.
@@ -1476,9 +1516,12 @@ function ensureDisplayableOutfit(outfit) {
 
   const styleKey = normalizeRequestedStyle(outfit.style) || "casual";
   const weather = outfit.weather || null;
-  const normalizedOutfit = { ...outfit, style: styleKey };
+  const normalizedOutfit = withChicNeckwear(
+    { ...outfit, style: styleKey },
+    styleKey,
+  );
   const validation = validateOutfit(normalizedOutfit, styleKey, weather);
-  if (validation.isValid) return outfit;
+  if (validation.isValid) return normalizedOutfit;
 
   const repaired = repairOrDiscardOutfit(normalizedOutfit, styleKey, weather, userClothes);
   if (repaired) {
