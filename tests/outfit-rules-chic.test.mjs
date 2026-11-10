@@ -325,6 +325,44 @@ test("Streetwear corrige un polo en t-shirt et signale l'absence de t-shirt", ()
   assert.match(completeness.message, /aucun t-shirt disponible/i);
 });
 
+test("Chic ajoute une cravate ou un nœud papillon avec une chemise", () => {
+  const chicWardrobe = [
+    ...wardrobe,
+    { id: "tie", name: "cravate bleu marine", category: "accessoires", colors: "bleu marine" },
+    { id: "bow", name: "nœud papillon noir", category: "accessoires", colors: "noir" },
+  ];
+  const res = resolveChicOutfit(chicWardrobe, { weather: { min: 14, max: 20 } });
+  assert.equal(res.success, true);
+  assert.ok(
+    res.pieces.some(
+      (piece) => piece.type === GARMENT_TYPES.CRAVATE || piece.type === GARMENT_TYPES.NOEUD_PAPILLON,
+    ),
+  );
+  assert.equal(
+    res.pieces.find((piece) => piece.slot === SLOTS.BASE).type,
+    GARMENT_TYPES.CHEMISE,
+  );
+});
+
+test("Chic n'ajoute pas de cravate avec un polo et Minimaliste n'en ajoute jamais", () => {
+  const noShirt = wardrobe.filter((piece) => piece.id !== "shirt");
+  const withTie = [
+    ...noShirt,
+    { id: "tie", name: "cravate bleu marine", category: "accessoires", colors: "bleu marine" },
+  ];
+  const chicPolo = resolveChicOutfit(withTie, { weather: { min: 14, max: 20 } });
+  assert.equal(chicPolo.success, true);
+  assert.equal(chicPolo.pieces.find((piece) => piece.slot === SLOTS.BASE).type, GARMENT_TYPES.POLO);
+  assert.ok(!chicPolo.pieces.some((piece) => piece.type === GARMENT_TYPES.CRAVATE));
+
+  const minimaliste = resolveChicOutfit(withTie, {
+    style: "minimaliste",
+    weather: { min: 14, max: 20 },
+  });
+  assert.equal(minimaliste.success, true);
+  assert.ok(!minimaliste.pieces.some((piece) => piece.type === GARMENT_TYPES.CRAVATE));
+});
+
 test("une réponse IA absente ou illisible renvoie « information manquante »", () => {
   const invalidJson = validateMatcherResponse("ceci n'est pas du JSON", wardrobe);
   assert.equal(invalidJson.ok, false);

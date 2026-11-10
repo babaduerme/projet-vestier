@@ -1,6 +1,6 @@
 # TESTS.md — Cas de vérification et résultats
 
-Dix cas principaux, plus quatre cas bonus. Les cas automatisés sont exécutés
+Dix cas principaux, plus cinq cas bonus. Les cas automatisés sont exécutés
 par `npm test`. Les cas navigateur sont marqués honnêtement « non exécuté »
 lorsqu'ils n'ont pas été joués dans cet environnement.
 
@@ -22,6 +22,7 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 | 12 | API : payload invalide rejeté | Automatisé | Pass |
 | 13 | Blouson/veste ajouté par temps froid | Automatisé | Pass |
 | 14 | Streetwear sans polo ni chemise | Automatisé | Pass |
+| 15 | Chic avec cravate ou nœud papillon | Automatisé | Pass |
 
 ## Cas détaillés
 
@@ -133,12 +134,22 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
   « Streetwear corrige un polo en t-shirt » et « Streetwear exclut polo et
   chemise » du moteur de style.
 
+### Cas 15 — Chic avec cravate ou nœud papillon
+
+- **Action** : composer une tenue Chic avec une chemise, un pull, un pantalon,
+  des chaussures habillées et une cravate ou un nœud papillon.
+- **Attendu** : la tenue contient la cravate ou le nœud papillon ; avec un polo,
+  aucun n'est ajouté ; Minimaliste n'en ajoute jamais.
+- **Résultat** : Pass.
+- **Référence** : tests « Chic ajoute une cravate ou un nœud papillon » et
+  « Chic n'ajoute pas de cravate avec un polo ».
+
 ## Commandes et résultats
 
 ```text
 npm test
-ℹ tests 73
-ℹ pass 73
+ℹ tests 75
+ℹ pass 75
 ℹ fail 0
 ```
 

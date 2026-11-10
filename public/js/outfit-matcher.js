@@ -1053,6 +1053,9 @@ export function resolveFormalOutfit(wardrobe, options = {}) {
   const candidatesPull = pickPool(
     (p) => p.slot === SLOTS.COUCHE && p.type === GARMENT_TYPES.PULL,
   );
+  const candidatesNeckwear = styleKey === "chic"
+    ? pickPool((p) => p.slot === SLOTS.ACCESSOIRE && isFormalNeckwear(p))
+    : [];
   const candidatesChaussures = pickPool((p) =>
     strictShoes
       ? p.slot === SLOTS.CHAUSSURES &&
@@ -1125,6 +1128,16 @@ export function resolveFormalOutfit(wardrobe, options = {}) {
   const shouldAddVeste = !weather || isCold || rainProb >= 40;
   if (shouldAddVeste && candidatesVeste.length) {
     pieces.push(candidatesVeste[0]);
+  }
+
+  // Cravate / nœud papillon : uniquement en Chic et uniquement avec une chemise.
+  const baseForNeckwear = pieces.find((piece) => piece.slot === SLOTS.BASE);
+  if (
+    styleKey === "chic" &&
+    baseForNeckwear?.type === GARMENT_TYPES.CHEMISE &&
+    candidatesNeckwear.length > 0
+  ) {
+    pieces.push(candidatesNeckwear[0]);
   }
 
   const orderedPieces = sortPiecesBySlot(dedupePiecesBySlot(pieces));
