@@ -42,6 +42,11 @@ const fileInput = document.getElementById("file-input");
 const cameraInput = document.getElementById("camera-input");
 const cameraTrigger = document.getElementById("camera-trigger");
 const galleryTrigger = document.getElementById("gallery-trigger");
+const cameraModal = document.getElementById("camera-modal");
+const cameraVideo = document.getElementById("camera-video");
+const cameraStatus = document.getElementById("camera-status");
+const cameraCaptureBtn = document.getElementById("camera-capture-btn");
+const cameraCancelBtn = document.getElementById("camera-cancel-btn");
 const imgPreview = document.getElementById("img-preview");
 const addClothForm = document.getElementById("add-cloth-form");
 const submitBtn = document.getElementById("submit-cloth-btn");
@@ -65,6 +70,7 @@ let hasMoreClothes = false;
 let clothesPageSize = 6;
 let editingClothId = null;
 let editingClothImageUrl = null;
+let cameraStream = null;
 
 /**
  * Calcule la taille d'une page de vêtements selon la largeur de l'écran (2 rangées complètes).
@@ -182,6 +188,7 @@ colorSwatches.forEach((swatch) => {
 
 // Fonctions de modale d'ajout
 function openModal() {
+  closeCameraCapture();
   editingClothId = null;
   editingClothImageUrl = null;
   analysisVersion += 1;
@@ -253,12 +260,167 @@ uploadArea?.addEventListener("click", (event) => {
 
 cameraTrigger?.addEventListener("click", (event) => {
   event.stopPropagation();
-  cameraInput.click();
+  void openCameraCapture();
 });
 
 galleryTrigger?.addEventListener("click", (event) => {
   event.stopPropagation();
   fileInput.click();
+});
+
+function stopCameraStream() {
+  if (cameraVideo) {
+    cameraVideo.pause();
+    cameraVideo.srcObject = null;
+  }
+  cameraStream?.getTracks().forEach((track) => track.stop());
+  cameraStream = null;
+}
+
+function closeCameraCapture() {
+  stopCameraStream();
+  cameraModal?.classList.remove("active");
+  cameraModal?.setAttribute("aria-hidden", "true");
+  if (cameraCaptureBtn) cameraCaptureBtn.disabled = true;
+}
+
+/**
+ * Ouvre la vraie caméra via getUserMedia. Le champ fichier `capture` n'est pas
+ * fiable sur ordinateur : le navigateur peut ouvrir le sélecteur de documents.
+ */
+async function openCameraCapture() {
+  if (!cameraModal || !cameraVideo) return;
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showToast(
+      "Caméra directe indisponible sur ce navigateur. Ouverture de l'appareil photo ou des documents.",
+      "error",
+    );
+    cameraInput.click();
+    return;
+  }
+
+  cameraModal.classList.add("active");
+  cameraModal.setAttribute("aria-hidden", "false");
+  if (cameraStatus) cameraStatus.textContent = "Initialisation de la caméra...";
+  if (cameraCaptureBtn) cameraCaptureBtn.disabled = true;
+
+  try {
+    stopCameraStream();
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 1280 },
+      },
+      audio: false,
+    });
+    cameraVideo.srcObject = cameraStream;
+    await cameraVideo.play();
+    if (cameraStatus) cameraStatus.textContent = "Cadre le vêtement puis appuie sur Capturer.";
+    if (cameraCaptureBtn) cameraCaptureBtn.disabled = false;
+  } catch (error) {
+    console.warn("Caméra indisponible :", error);
+    closeCameraCapture();
+    showToast(
+      "Caméra indisponible ou refusée. Ouvre l'appareil photo ou tes documents.",
+      "error",
+    );
+    cameraInput.click();
+  }
+}
+
+async function captureCameraPhoto() {
+  if (!cameraStream || !cameraVideo?.videoWidth) {
+    showToast("La caméra n'est pas encore prête.", "error");
+    return;
+  }
+
+  if (cameraCaptureBtn) cameraCaptureBtn.disabled = true;
+  const maxSide = 1600;
+  const scale = Math.min(1, maxSide / Math.max(cameraVideo.videoWidth, cameraVideo.videoHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(cameraVideo.videoWidth * scale));
+  canvas.height = Math.max(1, Math.round(cameraVideo.videoHeight * scale));
+  const context = canvas.getContext("2d", { alpha: false });
+  if (!context) {
+    closeCameraCapture();
+    showToast("Impossible de capturer la photo.", "error");
+    return;
+  }
+  context.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.9),
+  );
+  if (!blob) {
+    closeCameraCapture();
+    showToast("Impossible de capturer la photo.", "error");
+    return;
+  }
+
+  const file = new File([blob], `photo-${Date.now()}.jpg`, { type: "image/jpeg" });
+  closeCameraCapture();
+  processSelectedFile(file);
+}
+
+/**
+ * Traite un fichier image, qu'il vienne de la caméra ou des documents.
+ * @param {File} file
+ * @returns {boolean}
+ */
+function processSelectedFile(file) {
+  if (!file) return false;
+
+  analysisVersion += 1;
+  const currentAnalysisVersion = analysisVersion;
+  selectedFile = file;
+
+  if (!selectedFile.type.startsWith("image/")) {
+    showToast("Sélectionne un fichier image valide.", "error");
+    selectedFile = null;
+    return false;
+  }
+
+  if (selectedFile.size > 5 * 1024 * 1024) {
+    showToast("L'image est trop grande (max 5MB)", "error");
+    selectedFile = null;
+    return false;
+  }
+
+  if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+  previewObjectUrl = URL.createObjectURL(selectedFile);
+  Array.from(uploadArea.children).forEach((child) => {
+    if (
+      child.id !== "img-preview" &&
+      child.id !== "file-input" &&
+      child.id !== "camera-input" &&
+      child.id !== "ai-analyzing"
+    ) {
+      child.style.display = "none";
+    }
+  });
+
+  imgPreview.src = previewObjectUrl;
+  imgPreview.style.display = "block";
+
+  imgPreview.onload = () => {
+    analyzeUploadedImageWithClassifier(imgPreview, currentAnalysisVersion);
+  };
+  return true;
+}
+
+cameraCancelBtn?.addEventListener("click", closeCameraCapture);
+cameraCaptureBtn?.addEventListener("click", () => {
+  void captureCameraPhoto();
+});
+cameraModal?.addEventListener("click", (event) => {
+  if (event.target === cameraModal) closeCameraCapture();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && cameraModal?.classList.contains("active")) {
+    closeCameraCapture();
+  }
 });
 
 // Analyse IA d'une photo téléversée
@@ -319,45 +481,9 @@ async function analyzeUploadedImageWithClassifier(imgElement, version = analysis
 function handleSelectedImage(event) {
   const input = event.currentTarget;
   const file = event.target.files?.[0];
-  if (!file) return;
-
-  analysisVersion += 1;
-  const currentAnalysisVersion = analysisVersion;
-  selectedFile = file;
-
-  if (!selectedFile.type.startsWith("image/")) {
-    showToast("Sélectionne un fichier image valide.", "error");
-    selectedFile = null;
-    input.value = "";
-    return;
-  }
-
-  if (selectedFile.size > 5 * 1024 * 1024) {
-    showToast("L'image est trop grande (max 5MB)", "error");
-    selectedFile = null;
-    input.value = "";
-    return;
-  }
-
-  if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
-  previewObjectUrl = URL.createObjectURL(selectedFile);
-  Array.from(uploadArea.children).forEach((child) => {
-    if (
-      child.id !== "img-preview" &&
-      child.id !== "file-input" &&
-      child.id !== "camera-input" &&
-      child.id !== "ai-analyzing"
-    ) {
-      child.style.display = "none";
-    }
-  });
-
-  imgPreview.src = previewObjectUrl;
-  imgPreview.style.display = "block";
-
-  imgPreview.onload = () => {
-    analyzeUploadedImageWithClassifier(imgPreview, currentAnalysisVersion);
-  };
+  // Réinitialiser permet de resélectionner le même fichier plus tard.
+  input.value = "";
+  if (file) processSelectedFile(file);
 }
 
 fileInput?.addEventListener("change", handleSelectedImage);

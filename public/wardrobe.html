@@ -171,6 +171,19 @@
         </div>
     </div>
 
+    <!-- Camera capture modal -->
+    <div id="camera-modal" class="camera-modal" role="dialog" aria-modal="true" aria-labelledby="camera-modal-title" aria-hidden="true">
+        <div class="camera-card">
+            <h2 id="camera-modal-title">Prendre une photo</h2>
+            <video id="camera-video" autoplay playsinline muted></video>
+            <p id="camera-status" class="camera-status">Initialisation de la caméra...</p>
+            <div class="camera-actions">
+                <button type="button" id="camera-cancel-btn" class="btn btn-secondary">Annuler</button>
+                <button type="button" id="camera-capture-btn" class="btn btn-primary" disabled>Capturer</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <div id="delete-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-hidden="true">

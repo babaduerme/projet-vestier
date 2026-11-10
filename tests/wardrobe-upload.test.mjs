@@ -12,15 +12,26 @@ test("la modale propose la caméra et le sélecteur de documents", () => {
   assert.match(html, /Choisir une image/);
 });
 
-test("le champ caméra utilise capture=environment et le champ galerie est libre", () => {
-  const cameraInput = html.match(/<input[^>]*id="camera-input"[^>]*>/)?.[0] || "";
-  const galleryInput = html.match(/<input[^>]*id="file-input"[^>]*>/)?.[0] || "";
-
-  assert.match(cameraInput, /capture="environment"/);
-  assert.doesNotMatch(galleryInput, /capture=/);
+test("la caméra utilise getUserMedia et une modale de capture", () => {
+  assert.match(html, /id="camera-modal"/);
+  assert.match(html, /id="camera-video"/);
+  assert.match(html, /id="camera-capture-btn"/);
+  assert.match(html, /id="camera-input"[^>]*capture="environment"/);
+  assert.match(script, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(script, /captureCameraPhoto/);
 });
 
-test("les deux champs déclenchent le même traitement d'image", () => {
-  assert.match(script, /cameraInput\?\.addEventListener\("change", handleSelectedImage\)/);
+test("le bouton caméra ouvre la capture, pas le sélecteur de documents", () => {
+  assert.match(
+    script,
+    /cameraTrigger\?\.addEventListener\("click", \(event\) => \{[\s\S]*?openCameraCapture\(\)/,
+  );
+  assert.match(script, /galleryTrigger\?\.addEventListener\("click", \(event\) => \{[\s\S]*?fileInput\.click\(\)/);
+});
+
+test("caméra et documents alimentent le même traitement d'image", () => {
+  assert.match(script, /processSelectedFile\(file\)/);
   assert.match(script, /fileInput\?\.addEventListener\("change", handleSelectedImage\)/);
+  assert.match(script, /cameraInput\?\.addEventListener\("change", handleSelectedImage\)/);
+  assert.match(script, /processSelectedFile\(file\);\n\}/);
 });

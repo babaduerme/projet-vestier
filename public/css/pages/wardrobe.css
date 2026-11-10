@@ -392,6 +392,62 @@
   box-shadow: var(--ui-shadow);
 }
 
+.camera-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(28, 20, 16, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.camera-modal.active {
+  display: flex;
+}
+
+.camera-card {
+  width: min(94vw, 680px);
+  padding: 22px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius);
+  background: var(--ui-card);
+  box-shadow: var(--ui-shadow);
+}
+
+.camera-card h2 {
+  margin: 0 0 14px;
+  font-size: 1.2rem;
+}
+
+#camera-video {
+  display: block;
+  width: 100%;
+  max-height: 62vh;
+  border-radius: 14px;
+  background: #16110e;
+  object-fit: cover;
+}
+
+.camera-status {
+  margin: 10px 0 0;
+  color: var(--ui-muted);
+  font-size: 0.85rem;
+}
+
+.camera-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.camera-actions .btn {
+  min-width: 120px;
+}
+
 .close-modal {
   position: absolute;
   top: 20px;
