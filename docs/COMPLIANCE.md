@@ -12,7 +12,7 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
 | Base de données et données persistantes | Conforme | Firestore : `users/{uid}/clothes`, `outfits/currentWeek`, `settings/weeklyStyles`. |
 | CRUD complet sur au moins une entité | Conforme | Garde-robe : création, lecture, modification (bouton « Modifier » + `updateDoc`), suppression. |
 | Validation des entrées côté serveur | Conforme | `server.js` valide types, longueurs, styles, météo. `firestore.rules` valide les vêtements avant écriture. |
-| Dépôt Git avec historique lisible | Conforme | Quatre commits lisibles : cadrage documentaire, règles de tenues, API/CRUD, nettoyage. |
+| Dépôt Git avec historique lisible | Conforme | Cinq commits de construction : cadrage documentaire, règles de tenues, API/CRUD, nettoyage du dépôt, conformité. |
 | README d'installation | Conforme | `README.md` : prérequis, `npm install`, `npm start`, tests, API, structure. |
 
 ## 2. Les sept critères du fini
