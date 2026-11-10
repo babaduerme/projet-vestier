@@ -33,7 +33,8 @@ export const styles = [
     },
     exclude: {
       categories: [],
-      keywords: [],
+      keywords: ["t-shirt", "tshirt", "tee-shirt", "tee", "hoodie", "sweat à capuche"],
+      types: ["t-shirt", "hoodie"],
       colors: [],
     },
     prefer: {},
@@ -53,6 +54,7 @@ export const styles = [
     exclude: {
       categories: [],
       keywords: ["cravate", "noeud-papillon", "pochette", "bretelles", "gilet"],
+      types: ["t-shirt", "hoodie"],
       colors: [],
     },
     prefer: {},

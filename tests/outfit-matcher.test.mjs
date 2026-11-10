@@ -271,9 +271,10 @@ test("ÉTAPE 2 (REJET 6) : ROBE + BAS", () => {
   assert.ok(res.errors.some((e) => e.includes("ROBE")));
 });
 
-test("ÉTAPE 2 (ACCEPTÉ 1) : polo marine + pantalon kaki + baskets blanches + manteau gris", () => {
+test("ÉTAPE 2 (ACCEPTÉ 1) : polo marine + pull beige + pantalon kaki + baskets + manteau", () => {
   const outfit = [
     pieceMap["polo bleu marine"],
+    pieceMap["pull zippé beige"],
     pieceMap["pantalon vert kaki large"],
     pieceMap["baskets blanches"],
     pieceMap["manteau gris"],
@@ -283,9 +284,10 @@ test("ÉTAPE 2 (ACCEPTÉ 1) : polo marine + pantalon kaki + baskets blanches + m
   assert.equal(res.errors.length, 0);
 });
 
-test("ÉTAPE 2 (ACCEPTÉ 2) : robe noire + manteau gris + baskets noires", () => {
+test("ÉTAPE 2 (ACCEPTÉ 2) : robe noire + pull beige + manteau gris + baskets noires", () => {
   const outfit = [
     pieceMap["robe noire"],
+    pieceMap["pull zippé beige"],
     pieceMap["manteau gris"],
     pieceMap["baskets noir/rose"],
   ];
@@ -294,9 +296,9 @@ test("ÉTAPE 2 (ACCEPTÉ 2) : robe noire + manteau gris + baskets noires", () =>
   assert.equal(res.errors.length, 0);
 });
 
-test("ÉTAPE 2 (ACCEPTÉ 3) : t-shirt blanc + pull beige + jupe marron + baskets (Minimaliste)", () => {
+test("ÉTAPE 2 (ACCEPTÉ 3) : polo + pull beige + jupe marron + baskets (Minimaliste)", () => {
   const outfit = [
-    pieceMap["t-shirt blanc"],
+    pieceMap["polo bleu marine"],
     pieceMap["pull zippé beige"],
     pieceMap["jupe marron plissée"],
     pieceMap["baskets blanches"],
@@ -310,7 +312,7 @@ test("ÉTAPE 2 (ACCEPTÉ 3) : t-shirt blanc + pull beige + jupe marron + baskets
 // ÉTAPE 3 — VALIDATEUR DÉTERMINISTE UNIQUE (MÉTÉO, RESTRICTIONS)
 // ============================================================================
 
-test("ÉTAPE 3 : Temps chaud (> 24 °C) interdit la COUCHE", () => {
+test("ÉTAPE 3 : Temps chaud (> 24 °C) conserve la couche chaude obligatoire", () => {
   const hotOutfitWithSweater = [
     pieceMap["t-shirt blanc"],
     pieceMap["pull zippé beige"],
@@ -318,11 +320,20 @@ test("ÉTAPE 3 : Temps chaud (> 24 °C) interdit la COUCHE", () => {
     pieceMap["baskets blanches"],
   ];
   const res = validateOutfit(hotOutfitWithSweater, "casual", { temp: 28 });
-  assert.equal(res.isValid, false);
-  assert.ok(res.errors.some((e) => e.includes("> 24 °C") || e.includes("chaud")));
+  assert.equal(res.isValid, true);
+  assert.ok(!res.errors.some((e) => e.includes("> 24 °C") || e.includes("chaud")));
+
+  const hotOutfitWithoutLayer = [
+    pieceMap["t-shirt blanc"],
+    pieceMap["pantalon vert kaki large"],
+    pieceMap["baskets blanches"],
+  ];
+  const withoutLayer = validateOutfit(hotOutfitWithoutLayer, "casual", { temp: 28 });
+  assert.equal(withoutLayer.isValid, false);
+  assert.ok(withoutLayer.errors.some((e) => e.includes("pull") || e.includes("hoodie")));
 });
 
-test("C4 : La température minimale impose les couches et la pluie impose la veste", () => {
+test("C4 : La couche chaude est obligatoire ; une veste reste optionnelle", () => {
   const base = pieceMap["polo bleu marine"];
   const trousers = { id: "marine", name: "pantalon marine", type: GARMENT_TYPES.PANTALON, colors: "bleu marine" };
   const shoes = pieceMap["baskets blanches"];
@@ -330,7 +341,7 @@ test("C4 : La température minimale impose les couches et la pluie impose la ves
   const coat = pieceMap["manteau gris"];
 
   assert.equal(validateOutfit([base, trousers, shoes], "chic", { min: 8, max: 13, rain: 89 }).isValid, false);
-  assert.equal(validateOutfit([base, layer, trousers, shoes], "chic", { min: 8, max: 13, rain: 89 }).isValid, false);
+  assert.equal(validateOutfit([base, layer, trousers, shoes], "chic", { min: 8, max: 13, rain: 89 }).isValid, true);
   assert.equal(validateOutfit([base, layer, trousers, shoes, coat], "chic", { min: 8, max: 13, rain: 89 }).isValid, true);
   assert.equal(validateOutfit([base, layer, trousers, shoes, coat], "rock", { min: 12, max: 18, rain: 78 }).isValid, true);
 });
@@ -338,7 +349,7 @@ test("C4 : La température minimale impose les couches et la pluie impose la ves
 test("C1 : buildOutfit refuse toute tenue invalide et retourne une tenue complète", () => {
   const outfit = buildOutfit(
     [
-      pieceMap["t-shirt blanc"],
+      pieceMap["polo bleu marine"],
       pieceMap["pull zippé beige"],
       pieceMap["pantalon vert kaki large"],
       pieceMap["baskets blanches"],
@@ -394,11 +405,13 @@ test("ÉTAPE 4 : Signalement précis du slot manquant si aucune chaussure", () =
 test("ÉTAPE 4 : Évite deux tenues Chic consécutives identiques si alternative valide", () => {
   const formalWardrobe = [
     ...TEST_WARDROBE,
+    { id: "formal-shirt", name: "chemise blanche", colors: "blanc" },
     { id: "formal-shoes", name: "mocassins noirs", colors: "noir" },
   ];
   const day1 = resolveChicOutfit(formalWardrobe, { weather: { min: 6, max: 10 } });
   assert.equal(day1.success, true);
   const baseDay1 = day1.pieces.find((p) => p.slot === SLOTS.BASE);
+  assert.ok([GARMENT_TYPES.CHEMISE, GARMENT_TYPES.POLO].includes(baseDay1?.type));
 
   // Si on demande une alternative pour le jour suivant en évitant le même haut
   const day2 = resolveChicOutfit(formalWardrobe, {
@@ -407,7 +420,10 @@ test("ÉTAPE 4 : Évite deux tenues Chic consécutives identiques si alternative
   });
   assert.equal(day2.success, true);
   const baseDay2 = day2.pieces.find((p) => p.slot === SLOTS.BASE);
+  assert.ok([GARMENT_TYPES.CHEMISE, GARMENT_TYPES.POLO].includes(baseDay2?.type));
   assert.notEqual(baseDay1?.id, baseDay2?.id);
+  assert.ok(day2.pieces.some((p) => p.type === GARMENT_TYPES.PULL));
+  assert.ok(!day2.pieces.some((p) => p.type === GARMENT_TYPES.HOODIE));
 });
 
 // ============================================================================

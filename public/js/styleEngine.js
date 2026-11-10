@@ -1,20 +1,110 @@
 // styleEngine.js – logique pure du catalogue de styles
 // Aucun accès au DOM, uniquement des fonctions testables.
 import { styles } from "./styles.config.js";
+import {
+  GARMENT_TYPES,
+  detectGarmentType,
+} from "./outfit-matcher.js";
+
+function normalizeLabel(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
 
 /**
- * Résout un identifiant ou un alias vers le style complet.
+ * Fusionne un style parent et son enfant (héritage `extends`).
+ * Les exclusions sont cumulatives : Minimaliste hérite ainsi des interdictions
+ * de Chic (t-shirt, hoodie) tout en ajoutant les siennes (cravate, etc.).
+ */
+function mergeStyles(parent, child) {
+  return {
+    ...parent,
+    ...child,
+    id: child.id,
+    label: child.label,
+    extends: child.extends,
+    allow: {
+      ...parent.allow,
+      ...child.allow,
+      categories: child.allow?.categories ?? parent.allow?.categories ?? [],
+      keywords: [...new Set([...(parent.allow?.keywords || []), ...(child.allow?.keywords || [])])],
+      motifs: child.allow?.motifs ?? parent.allow?.motifs,
+      colors: child.allow?.colors ?? parent.allow?.colors,
+    },
+    exclude: {
+      ...parent.exclude,
+      ...child.exclude,
+      categories: [
+        ...new Set([
+          ...(parent.exclude?.categories || []),
+          ...(child.exclude?.categories || []),
+        ]),
+      ],
+      keywords: [
+        ...new Set([
+          ...(parent.exclude?.keywords || []),
+          ...(child.exclude?.keywords || []),
+        ]),
+      ],
+      types: [
+        ...new Set([
+          ...(parent.exclude?.types || []),
+          ...(child.exclude?.types || []),
+        ]),
+      ],
+      colors: [
+        ...new Set([
+          ...(parent.exclude?.colors || []),
+          ...(child.exclude?.colors || []),
+        ]),
+      ],
+    },
+    prefer: {
+      ...parent.prefer,
+      ...child.prefer,
+      keywords: [
+        ...new Set([...(parent.prefer?.keywords || []), ...(child.prefer?.keywords || [])]),
+      ],
+    },
+    constraints: {
+      ...parent.constraints,
+      ...child.constraints,
+    },
+  };
+}
+
+function resolveStyleById(id, visited = new Set()) {
+  const style = styles.find((candidate) => candidate.id === id);
+  if (!style) return null;
+  if (!style.extends || visited.has(style.id)) return style;
+  const nextVisited = new Set([...visited, style.id]);
+  const parent = resolveStyleById(style.extends, nextVisited);
+  return parent ? mergeStyles(parent, style) : style;
+}
+
+/**
+ * Résout un identifiant ou un alias vers le style complet, héritage compris.
  * Retourne le style object ou `null` si non trouvé.
  */
 export function resolveStyle(idOrAlias) {
-  const norm = idOrAlias?.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const norm = normalizeLabel(idOrAlias);
   if (!norm) return null;
   // recherche directe
-  let style = styles.find(s => s.id === norm);
-  if (style) return style;
+  const direct = styles.find((style) => style.id === norm);
+  if (direct) return resolveStyleById(direct.id);
   // recherche alias
-  style = styles.find(s => (s.aliases || []).includes(norm));
-  return style || null;
+  const byAlias = styles.find((style) => (style.aliases || []).includes(norm));
+  return byAlias ? resolveStyleById(byAlias.id) : null;
+}
+
+function resolveStyleObject(styleOrId) {
+  if (!styleOrId) return null;
+  if (typeof styleOrId === "string") return resolveStyle(styleOrId);
+  if (styleOrId.id && styleOrId.extends) return resolveStyle(styleOrId.id) || styleOrId;
+  return styleOrId;
 }
 
 /**
@@ -44,32 +134,34 @@ export function normalizeCategory(piece) {
   return "other";
 }
 
+function isExcludedByKeyword(piece, excludedKeywords) {
+  if (!excludedKeywords.length) return false;
+  const text = normalizeLabel(`${piece?.name || ""} ${piece?.description || ""}`);
+  return excludedKeywords.some((keyword) => text.includes(keyword));
+}
+
 /**
  * Filtre la garde‑robe selon les règles d'un style.
- * Retourne un tableau de pièces admissibles.
- * Applique deux passes : stricte puis assouplie (score).
+ * Applique les catégories autorisées ET les exclusions dures (mots-clés, types).
+ * Contrairement à l'ancienne version, la passe assouplie ne réintroduit jamais
+ * un vêtement explicitement exclu : elle ne servait qu'à faire passer les
+ * t-shirts en Chic.
  */
 export function filterWardrobe(wardrobe, style) {
-  if (!style) return [];
-  const allowed = new Set(style.allow?.categories || []);
-  const excludedKeywords = new Set(style.exclude?.keywords || []);
+  const resolved = resolveStyleObject(style);
+  if (!resolved) return [];
+  const allowed = new Set(resolved.allow?.categories || []);
+  const excludedKeywords = (resolved.exclude?.keywords || []).map(normalizeLabel);
+  const excludedTypes = new Set(resolved.exclude?.types || []);
 
-  // première passe stricte
-  const strict = wardrobe.filter(p => {
-    const cat = normalizeCategory(p);
-    if (!allowed.has(cat)) return false;
-    const lower = (p.name || "").toLowerCase();
-    for (const kw of excludedKeywords) {
-      if (lower.includes(kw)) return false;
-    }
+  return (wardrobe || []).filter((piece) => {
+    const category = normalizeCategory(piece);
+    if (!allowed.has(category)) return false;
+    const type = detectGarmentType(piece?.name, piece?.category);
+    if (excludedTypes.has(type)) return false;
+    if (isExcludedByKeyword(piece, excludedKeywords)) return false;
     return true;
   });
-
-  if (strict.length > 0) return strict;
-
-  // passe assouplie – on garde les pièces même si un mot‑clé exclu apparaît, mais on leur applique un malus de score.
-  // Ici on renvoie simplement tout ce qui correspond à une catégorie autorisée.
-  return wardrobe.filter(p => allowed.has(normalizeCategory(p)));
 }
 
 /**
@@ -77,33 +169,18 @@ export function filterWardrobe(wardrobe, style) {
  * Retourne { missing: [], reason: string }
  */
 export function missingMandatoryPieces(selection) {
-  const hasTop = selection.some(p => {
-    const cat = normalizeCategory(p);
-    // any top counts as base top for all styles
+  const hasTop = selection.some((piece) => {
+    const cat = normalizeCategory(piece);
     return cat === "top";
   });
-  const hasBottom = selection.some(p => {
-    const cat = normalizeCategory(p);
+  const hasBottom = selection.some((piece) => {
+    const cat = normalizeCategory(piece);
     return cat === "bottom" || cat === "dress";
   });
   const missing = [];
   if (!hasTop) missing.push("haut de base");
   if (!hasBottom) missing.push("bas");
-  const reason = missing.length ? `il manque ${missing.join(' et ')}` : "";
-  return { missing, reason };
-}
-  const hasTop = selection.some(p => {
-    const cat = normalizeCategory(p);
-    return cat === "top" && ["tshirt","polo","chemise"].some(k => (p.name || "").toLowerCase().includes(k));
-  });
-  const hasBottom = selection.some(p => {
-    const cat = normalizeCategory(p);
-    return cat === "bottom" || cat === "dress";
-  });
-  const missing = [];
-  if (!hasTop) missing.push("haut de base");
-  if (!hasBottom) missing.push("bas");
-  const reason = missing.length ? `il manque ${missing.join(' et ')}` : "";
+  const reason = missing.length ? `il manque ${missing.join(" et ")}` : "";
   return { missing, reason };
 }
 
@@ -111,116 +188,109 @@ export function missingMandatoryPieces(selection) {
  * Score d'une pièce pour un style (simple). Plus le score est haut, plus la pièce est prioritaire.
  */
 export function scorePiece(piece, style) {
+  const resolved = resolveStyleObject(style);
+  if (!resolved) return 0;
   let score = 0;
-  const lower = (piece.name || "").toLowerCase();
+  const lower = normalizeLabel(`${piece?.name || ""} ${piece?.description || ""}`);
+  const type = detectGarmentType(piece?.name, piece?.category);
   // préférences définies dans style.prefer.keywords
-  if (style.prefer?.keywords) {
-    for (const kw of style.prefer.keywords) {
-      if (lower.includes(kw)) score += 2;
+  if (resolved.prefer?.keywords) {
+    for (const kw of resolved.prefer.keywords) {
+      if (lower.includes(normalizeLabel(kw))) score += 2;
     }
   }
+  // Les styles formels privilégient chemise / polo et pull.
+  if (resolved.id === "chic" || resolved.id === "minimaliste") {
+    if (type === GARMENT_TYPES.CHEMISE) score += 2;
+    if (type === GARMENT_TYPES.POLO) score += 1;
+    if (type === GARMENT_TYPES.PULL) score += 1;
+  }
   // pénalités pour motifs interdits (style.constraints.motifs)
-  if (style.constraints?.motifs === "aucun" && /logo|print|graphic|motif/.test(lower)) {
+  if (resolved.constraints?.motifs === "aucun" && /logo|print|graphic|motif/.test(lower)) {
     score -= 2;
   }
   return score;
 }
 
+function isFormalStyleId(styleId) {
+  return styleId === "chic" || styleId === "minimaliste";
+}
+
 /**
  * Sélectionne les pièces les plus appropriées pour composer une tenue.
- * Simple heuristique : on garde le top prioritaire, un bottom, un layer si présent, un coat selon météo, des shoes.
+ * La couche chaude (pull, ou hoodie sur t-shirt) est toujours ajoutée.
  */
 export function composeOutfit(filteredWardrobe, style, weather) {
+  const resolved = resolveStyleObject(style);
+  if (!resolved) return [];
+  const formal = isFormalStyleId(resolved.id);
   // Trier par score décroissant (préférences de style)
-  const sorted = filteredWardrobe.slice().sort((a, b) => scorePiece(b, style) - scorePiece(a, style));
+  const sorted = (filteredWardrobe || [])
+    .slice()
+    .sort((a, b) => scorePiece(b, resolved) - scorePiece(a, resolved));
   const outfit = [];
 
-  // ---------- Top de base (t‑shirt / polo / chemise) ----------
-  const baseTopCandidates = sorted.filter(p =>
-    normalizeCategory(p) === "top" && /t[- ]?shirt|polo|chemise/.test(p.name.toLowerCase())
-  );
-  // Priorité : t‑shirt > polo > chemise
-  const baseTop = baseTopCandidates.find(p => /t[- ]?shirt/.test(p.name.toLowerCase()))
-    || baseTopCandidates.find(p => /polo/.test(p.name.toLowerCase()))
-    || baseTopCandidates.find(p => /chemise/.test(p.name.toLowerCase()));
+  // ---------- Top de base ----------
+  const baseCandidates = sorted.filter((piece) => {
+    const type = detectGarmentType(piece?.name, piece?.category);
+    if (formal) return type === GARMENT_TYPES.CHEMISE || type === GARMENT_TYPES.POLO;
+    return [GARMENT_TYPES.TSHIRT, GARMENT_TYPES.POLO, GARMENT_TYPES.CHEMISE].includes(type);
+  });
+  const baseTop = formal
+    ? baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.CHEMISE) ||
+      baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.POLO) ||
+      baseCandidates[0]
+    : baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.TSHIRT) ||
+      baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.POLO) ||
+      baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.CHEMISE);
+
   if (baseTop) outfit.push(baseTop);
 
-  // ---------- Layer (pull ou hoodie) ----------
-  // Recherche du meilleur layer compatible avec le top choisi
-  if (baseTop) {
-    const isTshirt = /t[- ]?shirt/.test(baseTop.name.toLowerCase());
-    const layerCandidates = sorted.filter(p => normalizeCategory(p) === "layer");
-    // Si le top est un t‑shirt, on accepte pull ou hoodie. Sinon, uniquement pull.
-    const compatibleLayer = layerCandidates.find(p => {
-      const name = p.name.toLowerCase();
-      const isHoodie = /hoodie|sweat|sweatshirt/.test(name);
-      const isPull = /pull/.test(name);
-      if (isTshirt) return isPull || isHoodie;
-      // polo ou chemise : seulement pull
-      return isPull;
-    });
-    if (compatibleLayer) outfit.push(compatibleLayer);
+  // ---------- Couche chaude obligatoire (pull ou hoodie) ----------
+  const baseType = baseTop ? detectGarmentType(baseTop?.name, baseTop?.category) : null;
+  const layer = sorted.find((piece) => {
+    const type = detectGarmentType(piece?.name, piece?.category);
+    if (type !== GARMENT_TYPES.PULL && type !== GARMENT_TYPES.HOODIE) return false;
+    if (formal && type !== GARMENT_TYPES.PULL) return false;
+    if (type === GARMENT_TYPES.HOODIE) {
+      return baseType === GARMENT_TYPES.TSHIRT;
+    }
+    return true;
+  });
+  if (layer && (baseTop || sorted.some((piece) => normalizeCategory(piece) === "dress"))) {
+    outfit.push(layer);
   }
 
   // ---------- Veste / manteau selon météo ----------
-  if (weather && weather.type === "rain" && sorted.some(p => /impermeable|parka|doudoune/.test(p.name.toLowerCase()))) {
-    const coat = sorted.find(p => /impermeable|parka|doudoune/.test(p.name.toLowerCase()));
+  if (weather && weather.type === "rain" && sorted.some((p) => /impermeable|parka|doudoune/.test((p.name || "").toLowerCase()))) {
+    const coat = sorted.find((p) => /impermeable|parka|doudoune/.test((p.name || "").toLowerCase()));
     if (coat) outfit.push(coat);
   } else {
-    const coat = sorted.find(p => normalizeCategory(p) === "coat");
+    const coat = sorted.find((p) => normalizeCategory(p) === "coat");
     if (coat) outfit.push(coat);
   }
 
   // ---------- Bas ou robe ----------
-  const bottom = sorted.find(p => ["bottom", "dress"].includes(normalizeCategory(p)));
+  const bottom = sorted.find((p) => ["bottom", "dress"].includes(normalizeCategory(p)));
   if (bottom) outfit.push(bottom);
 
   // ---------- Chaussures ----------
-  const shoes = sorted.find(p => normalizeCategory(p) === "shoes");
+  const shoes = sorted.find((p) => normalizeCategory(p) === "shoes");
   if (shoes) outfit.push(shoes);
 
-  // ---------- Cravate (style chic ou soirée) ----------
-  if (style.id === "chic" || style.id === "soiree") {
-    const chemise = outfit.find(p => normalizeCategory(p) === "top" && /chemise/.test(p.name.toLowerCase()));
+  // ---------- Cravate (Chic uniquement, avec chemise) ----------
+  if (resolved.id === "chic") {
+    const chemise = outfit.find(
+      (p) => normalizeCategory(p) === "top" && detectGarmentType(p?.name, p?.category) === GARMENT_TYPES.CHEMISE,
+    );
     if (chemise) {
-      const tie = sorted.find(p => normalizeCategory(p) === "accessory" && /cravate|noeud[-]?papillon/.test(p.name.toLowerCase()));
+      const tie = sorted.find(
+        (p) => normalizeCategory(p) === "accessory" && /cravate|noeud[-]?papillon/.test((p.name || "").toLowerCase()),
+      );
       if (tie) outfit.push(tie);
     }
   }
 
-  return outfit;
-}
-  // trier par score décroissant
-  const sorted = filteredWardrobe.slice().sort((a, b) => scorePiece(b, style) - scorePiece(a, style));
-  const outfit = [];
-  // haut de base
-  const top = sorted.find(p => normalizeCategory(p) === "top" && /t[- ]?shirt|polo|chemise/.test(p.name.toLowerCase()));
-  if (top) outfit.push(top);
-  // layer (pull/hoodie) – uniquement si top présent
-  const layer = sorted.find(p => normalizeCategory(p) === "layer");
-  if (layer && top) outfit.push(layer);
-  // coat selon météo
-  if (weather && weather.type === "rain" && sorted.some(p => /impermeable|parka|doudoune/.test(p.name.toLowerCase()))) {
-    const coat = sorted.find(p => /impermeable|parka|doudoune/.test(p.name.toLowerCase()));
-    if (coat) outfit.push(coat);
-  } else {
-    const coat = sorted.find(p => normalizeCategory(p) === "coat");
-    if (coat) outfit.push(coat);
-  }
-  // bottom ou dress
-  const bottom = sorted.find(p => ["bottom", "dress"].includes(normalizeCategory(p)));
-  if (bottom) outfit.push(bottom);
-  // shoes (exclure les chaussures formelles si style le désire – géré par filter)
-  const shoes = sorted.find(p => normalizeCategory(p) === "shoes");
-  if (shoes) outfit.push(shoes);
-  // accessoire cravate – uniquement si chemise présente et style autorise
-  if (style.id === "chic") {
-    const chemise = outfit.find(p => normalizeCategory(p) === "top" && /chemise/.test(p.name.toLowerCase()));
-    if (chemise) {
-      const tie = sorted.find(p => normalizeCategory(p) === "accessory" && /cravate|noeud[-]?papillon/.test(p.name.toLowerCase()));
-      if (tie) outfit.push(tie);
-    }
-  }
   return outfit;
 }
 
