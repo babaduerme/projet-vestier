@@ -1525,9 +1525,17 @@ function ensureDisplayableOutfit(outfit) {
 
   const repaired = repairOrDiscardOutfit(normalizedOutfit, styleKey, weather, userClothes);
   if (repaired) {
-    const revalidation = validateOutfit(repaired, styleKey, weather);
+    const repairedWithNeckwear = withChicNeckwear(
+      { ...repaired, style: styleKey },
+      styleKey,
+    );
+    const revalidation = validateOutfit(repairedWithNeckwear, styleKey, weather);
     if (revalidation.isValid) {
-      return { ...outfit, pieces: repaired.pieces, repaired: true };
+      return {
+        ...outfit,
+        pieces: repairedWithNeckwear.pieces,
+        repaired: true,
+      };
     }
   }
 
