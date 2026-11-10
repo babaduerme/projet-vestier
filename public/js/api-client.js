@@ -24,10 +24,8 @@ export async function validateOutfitOnServer(outfit) {
     pieces: outfit.pieces.map((piece) => ({
       name: piece.name,
       category: piece.category,
-      colors: piece.colors,
       type: piece.type,
       slot: piece.slot,
-      description: piece.description,
     })),
   };
 
