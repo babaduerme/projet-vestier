@@ -683,6 +683,12 @@ function loadUserClothes() {
 
       userClothes = migratedByDoc;
       updateGenerateButtonState();
+      // La garde-robe peut arriver après les tenues sauvegardées : on réaffiche
+      // pour que les réparations (cravate Chic, veste, etc.) puissent utiliser
+      // les vêtements réellement chargés.
+      if (latestGeneratedOutfits.length > 0) {
+        renderWeeklyOutfits(latestGeneratedOutfits);
+      }
     },
     (error) => {
       console.error("Erreur chargement garde-robe :", error);
