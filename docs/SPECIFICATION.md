@@ -123,6 +123,12 @@ Le MVP ne dépend pas des Cloud Functions et ne nécessite pas de déploiement.
 - Minimaliste : chaussures libres, pas de cravate, pas de nœud papillon, pas de
   fioritures.
 
+### 7.5 Streetwear
+
+- Base autorisée : t-shirt ou débardeur uniquement.
+- Polo et chemise refusés comme base.
+- Couche chaude : pull ou hoodie, le hoodie restant réservé au t-shirt.
+
 ## 8. Exigences non fonctionnelles
 
 - **Démarrage** : `npm start` sur une machine vierge, sans configuration secrète.

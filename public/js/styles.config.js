@@ -93,7 +93,9 @@ export const styles = [
       motifs: "libre",
       colors: "libre",
     },
-    exclude: {},
+    exclude: {
+      types: ["polo", "chemise"],
+    },
     prefer: {},
     constraints: {},
   },

@@ -120,6 +120,15 @@ export const FORMAL_BASE_TYPES = new Set([
 ]);
 
 /**
+ * Streetwear n'utilise pas de polo ni de chemise comme base : uniquement un
+ * t-shirt ou un débardeur. Les couches chaudes restent pull/hoodie.
+ */
+export const STREETWEAR_BASE_TYPES = new Set([
+  GARMENT_TYPES.TSHIRT,
+  GARMENT_TYPES.DEBARDEUR,
+]);
+
+/**
  * @param {string} style
  * @returns {boolean}
  */
@@ -693,6 +702,16 @@ export function validateOutfit(outfit, styleParam = "casual", weatherParam = nul
     }
   }
 
+  // Streetwear : pas de polo ni de chemise comme base.
+  if (cleanStyle === "streetwear") {
+    const invalidBase = basePieces.find((piece) => !STREETWEAR_BASE_TYPES.has(piece.type));
+    if (invalidBase) {
+      errors.push(
+        "Le style Streetwear n'accepte pas les polos ni les chemises comme base : utilise un t-shirt ou un débardeur.",
+      );
+    }
+  }
+
   // 4. Unicité par slot (sauf ACCESSOIRE max 3)
   [SLOTS.BASE, SLOTS.COUCHE, SLOTS.VESTE, SLOTS.BAS, SLOTS.ROBE, SLOTS.CHAUSSURES].forEach((slot) => {
     if (bySlot[slot].length > 1) {
@@ -868,15 +887,33 @@ export function repairOutfitWithWardrobe(outfit, wardrobe = [], style = "casual"
     }
   }
 
-  // 1 bis. Ajouter une base si elle manque (hors robe), pour réparer une
+  // 1 bis. Streetwear : remplacer un polo ou une chemise par un t-shirt.
+  if (cleanText(style) === "streetwear") {
+    const invalidBases = pieces.filter(
+      (piece) => piece.slot === SLOTS.BASE && !STREETWEAR_BASE_TYPES.has(piece.type),
+    );
+    if (invalidBases.length > 0) {
+      pieces = pieces.filter((piece) => !invalidBases.includes(piece));
+      invalidBases.forEach((piece) => {
+        if (piece.id != null) usedIds.delete(String(piece.id));
+      });
+      addFromCatalog(
+        (piece) => piece.slot === SLOTS.BASE && STREETWEAR_BASE_TYPES.has(piece.type),
+      );
+    }
+  }
+
+  // 1 ter. Ajouter une base si elle manque (hors robe), pour réparer une
   // réponse d'IA incomplète sans jamais afficher une tenue invalide.
   const hasRobe = pieces.some((piece) => piece.slot === SLOTS.ROBE);
   const hasBase = pieces.some((piece) => piece.slot === SLOTS.BASE);
   if (!hasBase && !hasRobe) {
     const rockStyle = cleanText(style) === "rock";
+    const streetwearStyle = cleanText(style) === "streetwear";
     addFromCatalog((piece) => {
       if (piece.slot !== SLOTS.BASE) return false;
       if (formal) return FORMAL_BASE_TYPES.has(piece.type);
+      if (streetwearStyle) return STREETWEAR_BASE_TYPES.has(piece.type);
       if (rockStyle) return piece.type !== GARMENT_TYPES.CHEMISE;
       return true;
     });
@@ -1175,6 +1212,12 @@ export function explainMissingPieces(clothes, style = "casual") {
     if (pulls.length === 0 && hoodies.length > 0 && tshirts.length === 0) {
       return "aucun pull disponible (un hoodie exige un t-shirt dessous)";
     }
+    if (styleKey === "streetwear" && robes.length === 0) {
+      const streetBases = bases.filter((piece) => STREETWEAR_BASE_TYPES.has(piece.type));
+      if (streetBases.length === 0) {
+        return "aucun t-shirt disponible (le style Streetwear n'accepte pas les polos ni les chemises)";
+      }
+    }
     if (robes.length === 0 && bases.length === 0) {
       return "un t-shirt, un polo ou une chemise";
     }
@@ -1391,8 +1434,9 @@ RÈGLES STRICTES DE COMPOSITION :
 9. RÈGLE D'UNICITÉ : Un seul élément par slot, sauf ACCESSOIRE (maximum 3). Aucun vêtement de type 'autre'.
 10. STYLE CHIC STRICT : En Chic, jamais de t-shirt : utilise une chemise ou un polo. La couche chaude est TOUJOURS un pull, jamais un hoodie. Utilise des chaussures habillées. S'il manque une pièce, indique précisément « aucun pull disponible » ou « aucun polo ou chemise disponible » ; ne remplace jamais le style Chic par « Chic décontracté ».
 11. MINIMALISTE : hérite de Chic (chemise ou polo, pull, jamais de t-shirt, jamais de hoodie) mais sans cravate, nœud papillon ni fioritures.
-12. Tu ne choisis QUE des IDs existants fournis. N'invente JAMAIS d'ID ni de vêtement.
-13. Toute donnée absente ou composition impossible : "information manquante : [pièce précise manquante]".
+12. STREETWEAR : base t-shirt ou débardeur uniquement ; jamais de polo ni de chemise. La couche chaude reste pull ou hoodie (hoodie sur t-shirt uniquement).
+13. Tu ne choisis QUE des IDs existants fournis. N'invente JAMAIS d'ID ni de vêtement.
+14. Toute donnée absente ou composition impossible : "information manquante : [pièce précise manquante]".
 
 EXEMPLES VALIDES (tirés des tests) :
 - Exemple 1 (Chic) : chemise blanche [BASE] + pull beige [COUCHE] + pantalon marine [BAS] + mocassins noirs [CHAUSSURES] + manteau gris [VESTE] -> Valide
@@ -1406,6 +1450,7 @@ EXEMPLES INVALIDES (tirés des tests) :
 - Invalide 3 : chemise blanche + hoodie noir + jean + mocassins -> REJETÉ : hoodie avec chemise.
 - Invalide 4 (Chic) : t-shirt blanc + pull beige + jean + mocassins -> REJETÉ : t-shirt en Chic (chemise ou polo obligatoire).
 - Invalide 5 (Chic) : chemise blanche + hoodie noir + jean + mocassins -> REJETÉ : hoodie en Chic (pull obligatoire).
+- Invalide 6 (Streetwear) : polo bleu marine + pull beige + jean + baskets -> REJETÉ : polo en Streetwear (t-shirt ou débardeur obligatoire).
 
 FORMAT DE RÉPONSE EXCLUSIF (JSON STRICT VALIDE SANS TEXTE AVANT NI APRÈS) :
 {

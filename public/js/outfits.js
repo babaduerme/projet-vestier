@@ -5,6 +5,8 @@ import { validateOutfitOnServer } from "./api-client.js";
 import {
   GARMENT_TYPES,
   SLOTS,
+  FORMAL_BASE_TYPES,
+  STREETWEAR_BASE_TYPES,
   migrateGarment,
   normalizeGarmentSlot,
   scoreStyle,
@@ -1314,13 +1316,14 @@ function generateOutfits(
   // Uniquement des couches chaudes : un sweat ou un gilet ne satisfait pas la
   // règle « pull ou hoodie ». En Chic/Minimaliste, seul le pull est autorisé.
   const basePool = availableHauts.filter((p) => normalizeGarmentSlot(p) === SLOTS.BASE);
-  // Rock exclut la chemise formelle : on ne la propose pas comme base.
-  const styleBasePool = isRockStyle
-    ? basePool.filter((p) => p.type !== GARMENT_TYPES.CHEMISE)
-    : basePool;
-  const formalBasePool = basePool.filter(
-    (p) => p.type === GARMENT_TYPES.CHEMISE || p.type === GARMENT_TYPES.POLO,
-  );
+  // Streetwear n'utilise que t-shirt/débardeur comme base. Rock exclut la
+  // chemise formelle. Les styles formels utilisent chemise/polo.
+  const styleBasePool = styleKey === "streetwear"
+    ? basePool.filter((p) => STREETWEAR_BASE_TYPES.has(p.type))
+    : isRockStyle
+      ? basePool.filter((p) => p.type !== GARMENT_TYPES.CHEMISE)
+      : basePool;
+  const formalBasePool = basePool.filter((p) => FORMAL_BASE_TYPES.has(p.type));
   const warmLayerPool = availableHauts.filter(
     (p) =>
       normalizeGarmentSlot(p) === SLOTS.COUCHE &&

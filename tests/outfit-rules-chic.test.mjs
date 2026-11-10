@@ -280,6 +280,51 @@ test("resolveChicOutfit ajoute un blouson quand il fait froid", () => {
   assert.ok(res.pieces.some((piece) => piece.type === GARMENT_TYPES.VESTE || piece.type === GARMENT_TYPES.MANTEAU));
 });
 
+test("Streetwear refuse les polos et les chemises comme base", () => {
+  const withPolo = validateOutfit(outfit(["polo", "pull", "jeans", "sneakers"]), "streetwear");
+  assert.equal(withPolo.isValid, false);
+  assert.ok(withPolo.errors.some((error) => error.toLowerCase().includes("polo")));
+
+  const withShirt = validateOutfit(outfit(["shirt", "pull", "jeans", "sneakers"]), "streetwear");
+  assert.equal(withShirt.isValid, false);
+  assert.ok(withShirt.errors.some((error) => error.toLowerCase().includes("chemise")));
+
+  assert.equal(validateOutfit(outfit(["tee", "pull", "jeans", "sneakers"]), "streetwear").isValid, true);
+  assert.equal(validateOutfit(outfit(["tee", "hoodie", "jeans", "sneakers"]), "streetwear").isValid, true);
+});
+
+test("Streetwear corrige un polo en t-shirt et signale l'absence de t-shirt", () => {
+  const corrected = validateMatcherResponse(
+    {
+      tenues: [
+        {
+          jour: "Lundi",
+          style: "Streetwear",
+          pieces: { base: "polo", couche: "pull", bas: "jeans", chaussures: "sneakers" },
+        },
+      ],
+    },
+    wardrobe,
+  );
+  assert.equal(corrected.ok, true);
+  assert.equal(
+    corrected.outfits[0].pieces.find((piece) => piece.slot === SLOTS.BASE).type,
+    GARMENT_TYPES.TSHIRT,
+  );
+
+  const completeness = checkWardrobeCompleteness(
+    [
+      { id: "polo", name: "polo bleu marine", category: "haut" },
+      { id: "pull", name: "pull beige", category: "haut" },
+      { id: "jeans", name: "jean brut", category: "bas" },
+      { id: "sneakers", name: "baskets blanches", category: "chaussures" },
+    ],
+    "streetwear",
+  );
+  assert.equal(completeness.canCompose, false);
+  assert.match(completeness.message, /aucun t-shirt disponible/i);
+});
+
 test("une réponse IA absente ou illisible renvoie « information manquante »", () => {
   const invalidJson = validateMatcherResponse("ceci n'est pas du JSON", wardrobe);
   assert.equal(invalidJson.ok, false);

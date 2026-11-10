@@ -20,7 +20,7 @@ const STYLE_RULES = {
   streetwear: {
     // Streetwear: style urbain, sneakers, hoodies, vêtements oversize
     allowed: /hoodie|sweat|pull|t[- ]?shirt|tshirt|tee\b|oversize|cargo|jean|sneaker|basket|casquette|manteau|accessoire/,
-    forbidden: /costume|cravate|chaussure de ville|chemise formelle/,
+    forbidden: /costume|cravate|chaussure de ville|chemise|polo/,
   },
   minimaliste: {
     // Minimaliste = Chic sans cravate, nœud papillon ni fioritures :

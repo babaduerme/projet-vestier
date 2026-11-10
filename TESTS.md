@@ -1,6 +1,6 @@
 # TESTS.md — Cas de vérification et résultats
 
-Dix cas principaux, plus trois cas bonus. Les cas automatisés sont exécutés
+Dix cas principaux, plus quatre cas bonus. Les cas automatisés sont exécutés
 par `npm test`. Les cas navigateur sont marqués honnêtement « non exécuté »
 lorsqu'ils n'ont pas été joués dans cet environnement.
 
@@ -21,6 +21,7 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 | 11 | Chic et Minimaliste sans t-shirt | Automatisé | Pass |
 | 12 | API : payload invalide rejeté | Automatisé | Pass |
 | 13 | Blouson/veste ajouté par temps froid | Automatisé | Pass |
+| 14 | Streetwear sans polo ni chemise | Automatisé | Pass |
 
 ## Cas détaillés
 
@@ -121,12 +122,23 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 - **Résultat** : Pass.
 - **Référence** : test « resolveChicOutfit ajoute un blouson quand il fait froid ».
 
+### Cas 14 — Streetwear sans polo ni chemise
+
+- **Action** : valider polo + pull + jean + baskets en Streetwear, puis
+  t-shirt + pull.
+- **Attendu** : polo et chemise refusés ; t-shirt accepté ; une réponse IA avec
+  polo est corrigée en t-shirt si possible, sinon message précis.
+- **Résultat** : Pass.
+- **Référence** : tests « Streetwear refuse les polos et les chemises »,
+  « Streetwear corrige un polo en t-shirt » et « Streetwear exclut polo et
+  chemise » du moteur de style.
+
 ## Commandes et résultats
 
 ```text
 npm test
-ℹ tests 70
-ℹ pass 70
+ℹ tests 73
+ℹ pass 73
 ℹ fail 0
 ```
 

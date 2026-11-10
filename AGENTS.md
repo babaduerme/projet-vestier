@@ -27,7 +27,8 @@ images, Node natif pour le serveur/API, `node:test` pour les tests.
 ## Règles métier non négociables
 Toute tenue contient exactement un pull ou un hoodie. Un hoodie n'est compatible
 qu'avec un t-shirt (jamais polo, chemise, débardeur ou robe). Chic et Minimaliste
-n'utilisent que chemise/polo + pull ; jamais de t-shirt ni de hoodie. Une tenue
+n'utilisent que chemise/polo + pull ; jamais de t-shirt ni de hoodie. Streetwear
+n'utilise que t-shirt/débardeur comme base, jamais polo ni chemise. Une tenue
 invalide est corrigée ou remplacée par une erreur explicite, jamais affichée.
 
 ## Conventions

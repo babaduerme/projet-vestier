@@ -67,6 +67,21 @@ test("Casual, Rock et Streetwear conservent t-shirt et hoodie", () => {
   }
 });
 
+test("Streetwear exclut polo et chemise et compose avec un t-shirt", () => {
+  const filtered = filterWardrobe(wardrobe, resolveStyle("streetwear"));
+  const types = filtered.map((piece) => detectGarmentType(piece.name, piece.category));
+  assert.ok(!types.includes(GARMENT_TYPES.POLO));
+  assert.ok(!types.includes(GARMENT_TYPES.CHEMISE));
+  assert.ok(types.includes(GARMENT_TYPES.TSHIRT));
+
+  const outfit = composeOutfit(filtered, resolveStyle("streetwear"), null);
+  const outfitTypes = outfit.map((piece) => detectGarmentType(piece.name, piece.category));
+  assert.ok(outfitTypes.includes(GARMENT_TYPES.TSHIRT));
+  assert.ok(!outfitTypes.includes(GARMENT_TYPES.POLO));
+  assert.ok(!outfitTypes.includes(GARMENT_TYPES.CHEMISE));
+  assert.ok(outfitTypes.includes(GARMENT_TYPES.PULL) || outfitTypes.includes(GARMENT_TYPES.HOODIE));
+});
+
 test("composeOutfit Chic produit un polo/chemise avec un pull, jamais un t-shirt ou un hoodie", () => {
   const outfit = composeOutfit(
     filterWardrobe(wardrobe, resolveStyle("chic")),

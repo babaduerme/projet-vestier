@@ -3,6 +3,7 @@
 import { styles } from "./styles.config.js";
 import {
   GARMENT_TYPES,
+  STREETWEAR_BASE_TYPES,
   detectGarmentType,
 } from "./outfit-matcher.js";
 
@@ -231,18 +232,24 @@ export function composeOutfit(filteredWardrobe, style, weather) {
   const outfit = [];
 
   // ---------- Top de base ----------
+  const streetwear = resolved.id === "streetwear";
   const baseCandidates = sorted.filter((piece) => {
     const type = detectGarmentType(piece?.name, piece?.category);
     if (formal) return type === GARMENT_TYPES.CHEMISE || type === GARMENT_TYPES.POLO;
+    if (streetwear) return STREETWEAR_BASE_TYPES.has(type);
     return [GARMENT_TYPES.TSHIRT, GARMENT_TYPES.POLO, GARMENT_TYPES.CHEMISE].includes(type);
   });
   const baseTop = formal
     ? baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.CHEMISE) ||
       baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.POLO) ||
       baseCandidates[0]
-    : baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.TSHIRT) ||
-      baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.POLO) ||
-      baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.CHEMISE);
+    : streetwear
+      ? baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.TSHIRT) ||
+        baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.DEBARDEUR) ||
+        baseCandidates[0]
+      : baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.TSHIRT) ||
+        baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.POLO) ||
+        baseCandidates.find((piece) => detectGarmentType(piece?.name, piece?.category) === GARMENT_TYPES.CHEMISE);
 
   if (baseTop) outfit.push(baseTop);
 
