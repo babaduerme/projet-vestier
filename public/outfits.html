@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StyleAI - Mes Tenues</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages/outfits.css" />
+    <link rel="prefetch" href="wardrobe.html" as="document" />
+    <link rel="modulepreload" href="js/wardrobe.js" />
+    <script src="js/theme.js?v=20261107-v12" defer></script>
+  </head>
+  <body class="outfits-page">
+    <a class="skip-link" href="#main-content">Aller au contenu</a>
+    <nav class="navbar">
+      <a class="nav-brand" href="wardrobe.html"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.8 6.7L12 16.8l-6 3.7 1.8-6.7-5.3-4.4L9.4 9 12 2.5Z"/></svg></span>StyleAI</a>
+      <div class="nav-links">
+        <a href="wardrobe.html">Ma Garde-robe</a>
+        <a href="outfits.html" class="active" aria-current="page">Mes Tenues</a>
+      </div>
+      <div id="user-info">
+        <span id="user-display">Chargement...</span>
+        <button id="logout-btn" class="btn" type="button">Déconnexion</button>
+      </div>
+    </nav>
+
+    <main id="main-content" class="container">
+
+      <!-- Section unique sur fond sombre chocolat -->
+      <section class="weekly-planner" aria-labelledby="weekly-planner-title">
+
+        <!-- Sous-en-tête du planning -->
+        <div class="weekly-planner-heading">
+          <div>
+            <p class="planner-kicker">Organisation de la semaine</p>
+            <h2 id="weekly-planner-title">Un style pour chaque jour</h2>
+          </div>
+          <div class="weekly-planner-meta">
+            <span id="today-style-label" class="today-style-label"></span>
+            <button type="button" id="reset-week-btn" class="reset-week-link" title="Remettre tous les jours sur Aucun style">
+              Réinitialiser la semaine
+            </button>
+          </div>
+        </div>
+        <p class="planner-description">
+          Choisis le style de chaque journée, puis clique sur le bouton en bas pour générer toute ta semaine.
+        </p>
+
+        <!-- Recherche et statut météo -->
+        <div class="city-weather-form">
+          <label for="city-input">Ville pour la météo</label>
+          <div class="city-weather-controls">
+            <input
+              id="city-input"
+              type="search"
+              placeholder="Ex. Paris, Lyon, Marseille"
+              autocomplete="address-level2"
+            />
+            <button id="city-weather-btn" type="button" class="btn-weather">
+              Appliquer
+            </button>
+          </div>
+          <p
+            id="city-weather-status"
+            class="city-weather-status"
+            aria-live="polite"
+          ></p>
+        </div>
+
+        <div
+          id="weather-summary"
+          class="weather-summary"
+          role="status"
+          aria-live="polite"
+        >
+          Recherche de la météo de la semaine...
+        </div>
+
+        <!-- 7 cartes de jours Lundi -> Dimanche -->
+        <div id="weekly-style-planner" class="weekly-style-planner" role="region" aria-label="Planning de la semaine"></div>
+
+        <p
+          id="planner-status"
+          class="planner-status"
+          role="status"
+          aria-live="polite"
+        ></p>
+
+        <!-- Bouton générer en BAS -->
+        <div class="generate-actions-bar">
+          <button id="generate-btn" class="btn-gold" type="button" disabled aria-disabled="true">
+            Générer toute la semaine
+          </button>
+        </div>
+
+        <div
+          id="progress-container"
+          class="hidden"
+          role="status"
+          aria-live="polite"
+        >
+          <div
+            class="progress-bar"
+            role="progressbar"
+            aria-label="Progression de la génération"
+            aria-valuemin="0"
+            aria-valuemax="7"
+            aria-valuenow="0"
+          >
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <p id="generation-status">Génération en cours...</p>
+        </div>
+
+        <button id="retry-generation-btn" class="btn-secondary hidden" type="button">
+          Réessayer les jours en échec
+        </button>
+
+      </section>
+
+      <section id="no-clothes-warning" class="hidden">
+        <p>
+          Ta garde-robe ne contient pas encore les pièces nécessaires. Ajoute un
+          haut et un bas, ou une robe/ensemble, ainsi qu'une paire de chaussures.
+        </p>
+        <p><a href="wardrobe.html">Aller à ma garde-robe</a></p>
+      </section>
+
+      <!-- Grille des tenues générées -->
+      <section id="outfits-container" class="hidden">
+        <div class="outfits-header-bar">
+          <h2 id="outfits-title">Tes 7 tenues</h2>
+          <span id="outfits-saved-indicator" class="outfits-saved-indicator"></span>
+        </div>
+        <div id="outfits-grid" class="outfits-grid">
+          <!-- Outfits will be injected here -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast notification container -->
+    <div
+      id="toast-container"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+
+    <script
+      type="module"
+      src="js/outfits.js"
+    ></script>
+  </body>
+</html>

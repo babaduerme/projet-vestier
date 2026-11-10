@@ -1,0 +1,469 @@
+/* ===== Page index (Landing Page) ===== */
+
+.shell {
+  width: min(1120px, calc(100% - 64px));
+  margin: 0 auto;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 22px 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  font: 800 1.06rem Manrope, sans-serif;
+  color: var(--ui-ink);
+}
+
+.brand-mark {
+  color: var(--ui-clay);
+  font-size: 1.3rem;
+}
+
+.site-header .nav-links {
+  display: flex;
+  gap: 28px;
+  margin-right: auto;
+  color: var(--ui-muted);
+  font-size: 0.82rem;
+}
+
+.site-header .nav-links a {
+  text-decoration: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.site-header .nav-links a:hover {
+  background: transparent;
+  color: var(--ui-ink);
+}
+
+.header-actions {
+  display: flex;
+  gap: 18px;
+}
+
+.outline-btn,
+.dark-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font: 600 0.78rem "DM Sans", sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.outline-btn {
+  border: 1px solid var(--ui-line);
+  background: transparent;
+  color: var(--ui-ink);
+}
+
+.outline-btn:hover {
+  transform: translateY(-1px);
+}
+
+.dark-btn {
+  color: #fff8ef;
+  background: var(--ui-ink);
+}
+
+.dark-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(42, 33, 29, 0.2);
+}
+
+/* Hero Section */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 70px;
+  min-height: 600px;
+  padding: 80px 0 100px;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin: 0 0 20px;
+  padding: 7px 13px;
+  border: 1px solid #e2c8b0;
+  border-radius: 999px;
+  background: #f4e4d4;
+  color: var(--ui-clay-dark);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.hero h1 {
+  max-width: 530px;
+  margin-bottom: 20px;
+  font: 800 clamp(3.1rem, 6vw, 5rem) / 0.98 Manrope, sans-serif;
+  letter-spacing: -0.065em;
+  color: var(--ui-ink);
+}
+
+.hero-copy {
+  max-width: 500px;
+  color: var(--ui-muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.hero-actions a {
+  padding: 14px 22px;
+  font-size: 0.82rem;
+}
+
+/* Illustration abstraite */
+.wardrobe-art {
+  position: relative;
+  min-height: 322px;
+  border: 1px solid #e0b997;
+  border-radius: 28px;
+  background: linear-gradient(145deg, #efd0b0, #dfb58d);
+  box-shadow: var(--ui-shadow);
+  overflow: hidden;
+}
+
+.garment {
+  position: absolute;
+  width: 155px;
+  height: 178px;
+  border-radius: 20px;
+  transform: rotate(-9deg);
+  box-shadow: 0 18px 24px rgba(112, 65, 32, 0.08);
+}
+
+.garment::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 34px;
+  width: 45px;
+  height: 25px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+  transform: translateX(-50%);
+}
+
+.gray {
+  left: 42px;
+  top: 43px;
+  background: #62676e;
+}
+
+.brown {
+  right: 43px;
+  top: 29px;
+  background: #925f32;
+  transform: rotate(8deg);
+}
+
+.navy {
+  left: 92px;
+  bottom: 22px;
+  width: 150px;
+  height: 169px;
+  background: #1f2d50;
+  transform: rotate(-3deg);
+  z-index: 2;
+}
+
+.suggestion {
+  position: absolute;
+  right: 21px;
+  bottom: 18px;
+  z-index: 3;
+  width: 160px;
+  padding: 12px;
+  border-radius: 13px;
+  background: var(--ui-clay);
+  color: #fffaf4;
+  font-size: 0.69rem;
+  line-height: 1.25;
+}
+
+.suggestion strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* Features */
+.section {
+  padding: 72px 0 42px;
+}
+
+.section-title {
+  margin-bottom: 22px;
+  font: 800 clamp(1.8rem, 3vw, 2.4rem) / 1.05 Manrope, sans-serif;
+  letter-spacing: -0.045em;
+  color: var(--ui-ink);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.feature-card {
+  min-height: 140px;
+  padding: 22px;
+  border: 1px solid var(--ui-line);
+  border-radius: 18px;
+  background: rgba(255, 253, 249, 0.72);
+  box-shadow: var(--ui-shadow);
+}
+
+.feature-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 18px;
+  border-radius: 9px;
+  background: var(--ui-clay);
+}
+
+.feature-card:nth-child(2) .feature-icon {
+  background: #925f32;
+}
+
+.feature-card:nth-child(3) .feature-icon {
+  background: #1f2d50;
+}
+
+.feature-card h3 {
+  margin-bottom: 7px;
+  font: 700 1rem Manrope, sans-serif;
+  color: var(--ui-ink);
+}
+
+.feature-card p,
+.step p {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+/* Steps */
+.steps-panel {
+  margin-top: 25px;
+  padding: 40px 44px;
+  border: 1px solid var(--ui-line);
+  border-radius: 26px;
+  background: var(--ui-card);
+  box-shadow: var(--ui-shadow);
+}
+
+.steps-panel h2 {
+  margin-bottom: 28px;
+  font: 800 2rem Manrope, sans-serif;
+  letter-spacing: -0.045em;
+  color: var(--ui-ink);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 13px;
+}
+
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--ui-ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.step h3 {
+  margin: 2px 0 7px;
+  font: 700 0.88rem Manrope, sans-serif;
+  color: var(--ui-ink);
+}
+
+/* Final CTA */
+.final-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 43px 0 24px;
+  padding: 32px 44px;
+  border: 1px solid var(--ui-line);
+  border-radius: 26px;
+  background: var(--ui-ink);
+  color: #fffaf4;
+  box-shadow: var(--ui-shadow);
+}
+
+.final-cta h2 {
+  margin: 0;
+  font: 800 2rem Manrope, sans-serif;
+  letter-spacing: -0.045em;
+  color: #fffaf4;
+}
+
+.final-cta .dark-btn {
+  background: var(--ui-clay);
+  color: #fffaf4;
+}
+
+/* Footer */
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0 25px;
+  color: #977c68;
+  font-size: 0.7rem;
+}
+
+.site-footer a {
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    width: min(100% - 34px, 560px);
+  }
+  .site-header {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .site-header .nav-links {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    gap: 18px;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding-top: 32px;
+  }
+  .hero h1 {
+    font-size: clamp(2.9rem, 14vw, 4.5rem);
+  }
+  .feature-grid,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  .steps-panel {
+    padding: 30px 24px;
+  }
+  .final-cta {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 28px 24px;
+  }
+  .final-cta h2 {
+    font-size: 1.7rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .header-actions {
+    gap: 8px;
+  }
+
+  /* Design system Vestiaire */
+  .brand-mark,
+  .nav-brand .brand-mark {
+    display: inline-flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--ui-clay);
+  }
+
+  .brand-mark svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+
+  .site-header {
+    padding: 22px 0;
+  }
+
+  .hero {
+    min-height: 600px;
+    padding: 80px 0 100px;
+  }
+
+  .eyebrow {
+    border-color: #e2c8b0;
+    background: #f4e4d4;
+    color: var(--ui-clay-dark);
+  }
+
+  .hero-copy,
+  .feature-card p,
+  .step p {
+    color: var(--ui-muted);
+  }
+
+  .wardrobe-art {
+    border-color: #e0b997;
+    background: linear-gradient(145deg, #efd0b0, #dfb58d);
+    box-shadow: var(--ui-shadow);
+  }
+
+  .feature-card,
+  .steps-panel,
+  .final-cta {
+    border-color: var(--ui-line);
+    box-shadow: var(--ui-shadow);
+  }
+
+  .feature-card {
+    background: rgba(255, 253, 249, 0.72);
+  }
+
+  .final-cta {
+    background: var(--ui-ink);
+    color: #fffaf4;
+  }
+
+  .final-cta h2 {
+    color: #fffaf4;
+  }
+  .header-actions a {
+    padding: 10px 13px;
+  }
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-actions a {
+    text-align: center;
+  }
+}

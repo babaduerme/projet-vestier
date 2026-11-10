@@ -1,0 +1,129 @@
+/* ===== Fondations du design system Vestiaire ===== */
+:root {
+  color-scheme: light;
+  --ui-ink: #241f1c;
+  --ui-muted: #5f5751;
+  --ui-paper: #f6f1eb;
+  --ui-bg: #f6f1eb;
+  --ui-card: #fffcf8;
+  --ui-card-raised: #ffffff;
+  --ui-sand: #e5dcd3;
+  --ui-clay: #b86f4f;
+  --ui-clay-dark: #874b38;
+  --ui-green: #5c7468;
+  --ui-amber: #b77931;
+  --ui-danger: #b42318;
+  --ui-line: #e5dcd3;
+  --ui-focus: #005fcc;
+  --ui-shadow: 0 12px 32px rgba(58, 42, 31, 0.08);
+  --ui-shadow-hover: 0 18px 42px rgba(58, 42, 31, 0.13);
+  --ui-radius-sm: 10px;
+  --ui-radius-md: 16px;
+  --ui-radius-lg: 24px;
+  --ui-radius: var(--ui-radius-lg);
+  --ui-pill: 999px;
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-6: 1.5rem;
+  --ui-space-8: 2rem;
+  --ui-space-12: 3rem;
+  --ui-space-16: 4rem;
+
+  /* Aliases de compatibilité */
+  --color-text: var(--ui-ink);
+  --color-muted: var(--ui-muted);
+  --color-surface: var(--ui-bg);
+  --color-white: #ffffff;
+  --color-border: var(--ui-line);
+  --color-focus: var(--ui-focus);
+  --ink: var(--ui-ink);
+  --muted: var(--ui-muted);
+  --cream: var(--ui-bg);
+  --white: #ffffff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background:
+    radial-gradient(circle at 85% 0%, rgba(255, 252, 248, 0.9) 0, transparent 32rem),
+    var(--ui-bg);
+  color: var(--ui-ink);
+  font-family: "DM Sans", Inter, system-ui, -apple-system, sans-serif;
+  line-height: 1.45;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+.nav-brand,
+.brand,
+.visual-copy,
+.cloth-name,
+.piece-name {
+  margin-top: 0;
+  font-family: Manrope, "DM Sans", system-ui, sans-serif;
+  letter-spacing: -0.035em;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -4rem;
+  left: 1rem;
+  z-index: 10000;
+  padding: 0.75rem 1rem;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-ink);
+  color: var(--ui-card);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

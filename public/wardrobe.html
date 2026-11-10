@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleAI - Ma Garde-robe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="prefetch" href="outfits.html" as="document">
+    <link rel="modulepreload" href="js/outfits.js">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages/wardrobe.css">
+    <script src="js/theme.js?v=20261107-v12" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Aller au contenu</a>
+    <nav class="navbar">
+        <a href="wardrobe.html" class="nav-brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.8 6.7L12 16.8l-6 3.7 1.8-6.7-5.3-4.4L9.4 9 12 2.5Z"/></svg></span>StyleAI</a>
+        <div class="nav-links">
+            <a href="wardrobe.html" class="active" aria-current="page">Ma Garde-robe</a>
+            <a href="outfits.html">Mes Tenues</a>
+        </div>
+        <div id="user-info">
+            <span id="user-display">Chargement...</span>
+            <span id="user-email" class="visually-hidden"></span>
+            <button id="logout-btn" class="btn" type="button">Déconnexion</button>
+        </div>
+    </nav>
+
+    <main id="main-content" class="container wardrobe-dashboard">
+        <section class="dashboard-top">
+            <div class="page-header dashboard-intro">
+                <div>
+                    <p class="dashboard-kicker">Votre dressing, <span id="cloth-count">0</span> pièces</p>
+                    <h1>Ma<br>Garde-robe</h1>
+                </div>
+                <button id="open-modal-btn" class="btn btn-primary">+ Ajouter un vêtement</button>
+            </div>
+            <aside class="ai-suggestion" aria-labelledby="suggestion-title">
+                <p class="dashboard-kicker">✦ &nbsp;Suggestion de l’IA</p>
+                <h2 id="suggestion-title">La tenue du jour</h2>
+                <ul id="suggestion-pieces-list">
+                    <li><span class="suggestion-swatch swatch-gray"></span>Manteau gris</li>
+                    <li><span class="suggestion-swatch swatch-black"></span>Chemise noir à motifs</li>
+                    <li><span class="suggestion-swatch swatch-blue"></span>Pantalon bleu marine</li>
+                </ul>
+                <a class="suggestion-action" href="outfits.html">Générer mes tenues de la semaine</a>
+            </aside>
+        </section>
+
+        <div class="filter-bar">
+            <button type="button" class="filter-pill active" data-category="tous" aria-pressed="true">Tous</button>
+            <button type="button" class="filter-pill" data-category="haut" aria-pressed="false">Hauts</button>
+            <button type="button" class="filter-pill" data-category="bas" aria-pressed="false">Bas</button>
+            <button type="button" class="filter-pill" data-category="robe" aria-pressed="false">Robes</button>
+            <button type="button" class="filter-pill" data-category="manteau" aria-pressed="false">Manteaux</button>
+            <button type="button" class="filter-pill" data-category="chaussures" aria-pressed="false">Chaussures</button>
+            <button type="button" class="filter-pill" data-category="accessoires" aria-pressed="false">Accessoires</button>
+            <button type="button" class="filter-pill" data-category="ensemble" aria-pressed="false">Ensembles</button>
+        </div>
+
+        <div id="clothes-grid" class="clothes-grid">
+            <!-- Populated by JS -->
+        </div>
+        <button type="button" class="btn btn-secondary" id="load-more-clothes-btn" hidden>
+            Voir plus de vêtements
+        </button>
+
+        <div id="empty-state" class="empty-state">
+            <div class="empty-emoji" aria-hidden="true">👗</div>
+            <h2>Commence par ajouter des vêtements</h2>
+            <p class="u-inline-wardrobe-1">Ta garde-robe est vide pour le moment.</p>
+            <button class="btn btn-primary" id="empty-wardrobe-add-btn">Ajouter mon premier vêtement</button>
+        </div>
+    </main>
+
+    <!-- Add Modal -->
+    <div id="add-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="add-modal-title" aria-hidden="true">
+        <div class="modal" tabindex="-1">
+            <button type="button" class="close-modal" aria-label="Fermer la fenêtre d’ajout">&times;</button>
+            <h2 id="add-modal-title">Ajouter un vêtement</h2>
+            
+            <form id="add-cloth-form">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">📷</div>
+                    <button type="button" class="upload-trigger">Clique pour ajouter une photo</button>
+                    <p class="u-inline-wardrobe-2">JPG, PNG (max 5MB)</p>
+                    <input type="file" id="file-input" accept="image/*" class="u-inline-wardrobe-3">
+                    <img id="img-preview" alt="Aperçu du vêtement sélectionné" width="200" height="200">
+                    <div id="ai-analyzing" class="u-inline-wardrobe-4">
+                        ✨ Analyse IA en cours (détection type & couleur)...
+                    </div>
+                </div>
+
+                <div class="modal-form-group">
+                    <label for="cloth-name">Nom du vêtement *</label>
+                    <input type="text" id="cloth-name" required aria-required="true" autocomplete="off">
+                </div>
+
+                <div class="modal-form-group">
+                    <label for="cloth-category">Catégorie *</label>
+                    <select id="cloth-category" required aria-required="true">
+                        <option value="haut">Haut</option>
+                        <option value="bas">Bas</option>
+                        <option value="robe">Robe</option>
+                        <option value="manteau">Manteau</option>
+                        <option value="chaussures">Chaussures</option>
+                        <option value="accessoires">Accessoires</option>
+                        <option value="ensemble">Ensemble</option>
+                    </select>
+                </div>
+
+                <!-- Pattern selection (Uni / Motif) -->
+                <div class="modal-form-group">
+                    <span class="field-label" id="pattern-label">Aspect du vêtement</span>
+                    <div class="pattern-toggle">
+                        <button type="button" class="pattern-btn active" data-pattern="uni" id="btn-pattern-uni">
+                            <span>⚪</span> Uni
+                        </button>
+                        <button type="button" class="pattern-btn" data-pattern="motif" id="btn-pattern-motif">
+                            <span>🎨</span> À motifs / Imprimé
+                        </button>
+                    </div>
+                    <input type="hidden" id="cloth-pattern" value="uni">
+                </div>
+
+                <!-- Color Palette (sélection visuelle) -->
+                <div class="modal-form-group">
+                    <span class="field-label" id="colors-label">Couleur(s) <span id="selected-colors-label" class="u-inline-wardrobe-5">(Clique pour cocher)</span></span>
+                    <div class="color-palette-grid" id="color-palette">
+                        <div class="color-swatch u-inline-wardrobe-6" data-color="noir" title="Noir"></div>
+                        <div class="color-swatch u-inline-wardrobe-7" data-color="blanc" title="Blanc"></div>
+                        <div class="color-swatch u-inline-wardrobe-8" data-color="gris" title="Gris"></div>
+                        <div class="color-swatch u-inline-wardrobe-9" data-color="bleu marine" title="Bleu marine"></div>
+                        <div class="color-swatch u-inline-wardrobe-10" data-color="bleu" title="Bleu"></div>
+                        <div class="color-swatch u-inline-wardrobe-11" data-color="bleu ciel" title="Bleu ciel"></div>
+                        <div class="color-swatch u-inline-wardrobe-12" data-color="beige" title="Beige"></div>
+                        <div class="color-swatch u-inline-wardrobe-13" data-color="marron" title="Marron"></div>
+                        <div class="color-swatch u-inline-wardrobe-14" data-color="kaki" title="Kaki"></div>
+                        <div class="color-swatch u-inline-wardrobe-15" data-color="vert" title="Vert"></div>
+                        <div class="color-swatch u-inline-wardrobe-16" data-color="rouge" title="Rouge"></div>
+                        <div class="color-swatch u-inline-wardrobe-17" data-color="bordeaux" title="Bordeaux"></div>
+                        <div class="color-swatch u-inline-wardrobe-18" data-color="rose" title="Rose"></div>
+                        <div class="color-swatch u-inline-wardrobe-19" data-color="jaune" title="Jaune"></div>
+                        <div class="color-swatch u-inline-wardrobe-20" data-color="orange" title="Orange"></div>
+                        <div class="color-swatch u-inline-wardrobe-21" data-color="violet" title="Violet"></div>
+                    </div>
+                    <input type="hidden" id="cloth-colors" value="">
+                </div>
+
+                <div class="modal-form-group">
+                    <label for="cloth-desc">Description</label>
+                    <textarea id="cloth-desc" rows="3" placeholder="ex: T-shirt basique blanc en coton, col rond"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn close-modal-btn u-inline-wardrobe-22">Annuler</button>
+                    <button type="submit" class="btn btn-primary" id="submit-cloth-btn">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="delete-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-hidden="true">
+        <div class="delete-confirm-card">
+            <h3 id="delete-confirm-title">Supprimer ce vêtement ?</h3>
+            <p>Cette action retirera définitivement ce vêtement de ta garde-robe.</p>
+            <div class="delete-confirm-actions">
+                <button type="button" id="cancel-delete-btn">Annuler</button>
+                <button type="button" id="confirm-delete-btn">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/wardrobe.js"></script>
+</body>
+</html>

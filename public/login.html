@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StyleAI - Connexion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Feuilles de style organisées -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/login.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Aller au contenu</a>
+<main id="main-content" class="auth-layout">
+  <section class="auth-visual" aria-label="Présentation StyleAI">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.8 6.7L12 16.8l-6 3.7 1.8-6.7-5.3-4.4L9.4 9 12 2.5Z"/></svg></span>StyleAI
+    </a>
+    <div class="art" aria-hidden="true">
+      <div class="garment gray"></div>
+      <div class="garment brown"></div>
+      <div class="garment navy"></div>
+    </div>
+    <h1 class="visual-copy">Retrouve ton dressing, trouve ta tenue.</h1>
+  </section>
+  <section class="auth-main">
+    <div class="auth-card">
+      <h1>Connexion</h1>
+      <p class="auth-intro">Content de te revoir. Entre tes identifiants.</p>
+      <div class="tabs" role="tablist" aria-label="Choix du formulaire">
+        <button type="button" class="tab active" role="tab" aria-controls="login-form" data-target="login-form" aria-selected="true">Connexion</button>
+        <button type="button" class="tab" role="tab" aria-controls="signup-form" data-target="signup-form" aria-selected="false">Créer un compte</button>
+      </div>
+      <div id="error-message" class="error-message" role="alert" aria-live="assertive"></div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">Adresse e-mail</label>
+          <input type="email" id="login-email" required aria-required="true" aria-describedby="error-message" autocomplete="email" placeholder="prenom@exemple.fr">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Mot de passe</label>
+          <input type="password" id="login-password" required aria-required="true" aria-describedby="error-message" autocomplete="current-password">
+        </div>
+        <a href="#" id="forgot-password" class="forgot-password">Mot de passe oublié ?</a>
+        <button type="submit" class="submit-btn u-inline-login-1">Se connecter</button>
+        <p class="switch-copy">Pas encore de compte ? <a href="#" data-switch="signup-form">Créer un compte</a></p>
+      </form>
+      <form id="signup-form" class="signup-form" style="display: none;">
+        <div class="form-group">
+          <label for="signup-name">Prénom</label>
+          <input type="text" id="signup-name" required aria-required="true" aria-describedby="error-message" autocomplete="given-name">
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Adresse e-mail</label>
+          <input type="email" id="signup-email" required aria-required="true" aria-describedby="error-message" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Mot de passe</label>
+          <input type="password" id="signup-password" required aria-required="true" aria-describedby="error-message" autocomplete="new-password">
+        </div>
+        <button type="submit" class="submit-btn">Créer mon compte</button>
+        <p class="switch-copy">Déjà un compte ? <a href="#" data-switch="login-form">Se connecter</a></p>
+      </form>
+    </div>
+  </section>
+</main>
+<script type="module" src="js/login.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StyleAI - Votre dressing, version intelligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Feuilles de style organisées -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/index.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Aller au contenu</a>
+<header class="shell site-header">
+  <a class="brand" href="index.html">
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.8 6.7L12 16.8l-6 3.7 1.8-6.7-5.3-4.4L9.4 9 12 2.5Z"/></svg></span>StyleAI
+  </a>
+  <nav class="nav-links" aria-label="Navigation principale">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#how-it-works">Comment ça marche</a>
+  </nav>
+  <div class="header-actions">
+    <a class="outline-btn" href="login.html">Se connecter</a>
+    <a class="dark-btn" href="login.html">Commencer</a>
+  </div>
+</header>
+<main id="main-content" class="shell">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Votre dressing, version intelligente</p>
+      <h1>Moins de doute devant l'armoire.</h1>
+      <p class="hero-copy">Range tous tes vêtements au même endroit et laisse l'IA composer des tenues qui te ressemblent.</p>
+      <div class="hero-actions">
+        <a class="orange-btn" href="login.html">Créer mon dressing</a>
+        <a class="outline-btn" href="login.html">Se connecter</a>
+      </div>
+    </div>
+    <div class="wardrobe-art" aria-label="Illustration abstraite de vêtements">
+      <div class="garment gray"></div>
+      <div class="garment brown"></div>
+      <div class="garment navy"></div>
+      <div class="suggestion"><strong>Suggestion de l'IA</strong>Manteau gris + Pantalon bleu marine</div>
+    </div>
+  </section>
+  <section id="features" class="section">
+    <h2 class="section-title">Tout pour t'habiller sans y penser</h2>
+    <div class="feature-grid">
+      <article class="feature-card">
+        <div class="feature-icon"></div>
+        <h3>Ajoute en un clic</h3>
+        <p>Une photo suffit : l'IA reconnaît la catégorie et le type de motif.</p>
+      </article>
+      <article class="feature-card">
+        <div class="feature-icon"></div>
+        <h3>Un dressing bien rangé</h3>
+        <p>Hauts, bas, manteaux, accessoires : filtre en un geste.</p>
+      </article>
+      <article class="feature-card">
+        <div class="feature-icon"></div>
+        <h3>Des tenues sur mesure</h3>
+        <p>L'agent IA assemble tes pièces et te propose la tenue du jour.</p>
+      </article>
+    </div>
+  </section>
+  <section id="how-it-works" class="steps-panel">
+    <h2>Comment ça marche</h2>
+    <div class="steps">
+      <article class="step">
+        <span class="step-number">1</span>
+        <div>
+          <h3>Crée ton compte</h3>
+          <p>Quelques secondes suffisent.</p>
+        </div>
+      </article>
+      <article class="step">
+        <span class="step-number">2</span>
+        <div>
+          <h3>Ajoute tes vêtements</h3>
+          <p>Prends-les en photo, l'IA s'occupe du reste.</p>
+        </div>
+      </article>
+      <article class="step">
+        <span class="step-number">3</span>
+        <div>
+          <h3>Reçois tes tenues</h3>
+          <p>Compose, enregistre et retrouve tes looks.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+  <section class="final-cta">
+    <h2>Prêt à ouvrir ton dressing ?</h2>
+    <a class="dark-btn" href="login.html">Commencer gratuitement</a>
+  </section>
+  <footer class="site-footer">
+    <span>StyleAI</span>
+    <span><a href="#">Accessibilité</a> · <a href="#">Confidentialité</a> · <a href="#">Contact</a></span>
+  </footer>
+</main>
+<script type="module">
+  import { auth } from "./js/config.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.querySelectorAll('a[href="login.html"]').forEach((btn) => {
+        btn.href = "wardrobe.html";
+        btn.textContent = "Mon dressing";
+      });
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "styleai-wardrobe",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:style-rules": "node --test tests/style-rules.test.mjs",
+    "test:matcher": "node --test tests/outfit-matcher.test.mjs",
+    "lighthouse:mobile": "lhci autorun --config=.lighthouserc.json"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1"
+  }
+}
