@@ -3,9 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
-    "test:style-rules": "node --test tests/style-rules.test.mjs",
-    "test:matcher": "node --test tests/outfit-matcher.test.mjs",
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node tests/run-all.mjs",
+    "test:style-rules": "node tests/style-rules.test.mjs",
+    "test:matcher": "node tests/outfit-matcher.test.mjs",
+    "test:rules": "node tests/outfit-rules-chic.test.mjs",
     "lighthouse:mobile": "lhci autorun --config=.lighthouserc.json"
   },
   "devDependencies": {

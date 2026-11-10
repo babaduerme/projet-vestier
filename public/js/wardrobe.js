@@ -29,6 +29,7 @@ import {
   serverTimestamp,
   setDoc,
   startAfter,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 // Éléments DOM
@@ -59,6 +60,8 @@ let stopClothesListener = null;
 let clothesCursor = null;
 let hasMoreClothes = false;
 let clothesPageSize = 6;
+let editingClothId = null;
+let editingClothImageUrl = null;
 
 /**
  * Calcule la taille d'une page de vêtements selon la largeur de l'écran (2 rangées complètes).
@@ -176,6 +179,8 @@ colorSwatches.forEach((swatch) => {
 
 // Fonctions de modale d'ajout
 function openModal() {
+  editingClothId = null;
+  editingClothImageUrl = null;
   analysisVersion += 1;
   modalOverlay.classList.add("active");
   addClothForm.reset();
@@ -185,6 +190,9 @@ function openModal() {
   selectedFile = null;
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
   previewObjectUrl = null;
+  const modalTitle = document.getElementById("add-modal-title");
+  if (modalTitle) modalTitle.textContent = "Ajouter un vêtement";
+  if (submitBtn) submitBtn.textContent = "Ajouter";
   Array.from(uploadArea.children).forEach((child) => {
     if (
       child.id !== "img-preview" &&
@@ -194,6 +202,41 @@ function openModal() {
       child.style.display = "block";
     }
   });
+}
+
+/**
+ * Ouvre la modale en mode modification, préremplie avec le vêtement choisi.
+ * @param {object} cloth
+ */
+function openEditModal(cloth) {
+  if (!cloth) return;
+  openModal();
+  editingClothId = cloth.id;
+  editingClothImageUrl = cloth.imageUrl || null;
+
+  const modalTitle = document.getElementById("add-modal-title");
+  if (modalTitle) modalTitle.textContent = "Modifier un vêtement";
+  if (submitBtn) submitBtn.textContent = "Enregistrer";
+
+  document.getElementById("cloth-name").value = cloth.name || "";
+  document.getElementById("cloth-category").value = cloth.category || "haut";
+  document.getElementById("cloth-desc").value = cloth.description || "";
+  setPattern(cloth.pattern === "motif" ? "motif" : "uni");
+  selectColorsByName(cloth.colors);
+
+  if (cloth.imageUrl) {
+    imgPreview.src = cloth.imageUrl;
+    imgPreview.style.display = "block";
+    Array.from(uploadArea.children).forEach((child) => {
+      if (
+        child.id !== "img-preview" &&
+        child.id !== "file-input" &&
+        child.id !== "ai-analyzing"
+      ) {
+        child.style.display = "none";
+      }
+    });
+  }
 }
 
 function closeModal() {
@@ -379,14 +422,19 @@ async function uploadToCloudinary(file) {
   }
 }
 
-// Ajout d'un vêtement à Firestore
+// Ajout ou modification d'un vêtement dans Firestore
 addClothForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   submitBtn.disabled = true;
-  submitBtn.textContent = "Ajout...";
+  submitBtn.textContent = editingClothId ? "Enregistrement..." : "Ajout...";
+
+  const restoreSubmitLabel = () => {
+    submitBtn.disabled = false;
+    submitBtn.textContent = editingClothId ? "Enregistrer" : "Ajouter";
+  };
 
   try {
-    let imageUrl = null;
+    let imageUrl = editingClothId ? editingClothImageUrl : null;
     if (selectedFile) {
       const optimizedFile = await optimizeImageForUpload(selectedFile);
       imageUrl = await uploadToCloudinary(optimizedFile);
@@ -398,8 +446,7 @@ addClothForm?.addEventListener("submit", async (e) => {
         "Veuillez sélectionner au moins une couleur sur la palette.",
         "error",
       );
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Ajouter";
+      restoreSubmitLabel();
       return;
     }
 
@@ -407,8 +454,20 @@ addClothForm?.addEventListener("submit", async (e) => {
     const categoryValue = document.getElementById("cloth-category").value;
     if (!nameValue || !VALID_CATEGORIES.includes(categoryValue)) {
       showToast("Renseigne un nom et une catégorie valides.", "error");
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Ajouter";
+      restoreSubmitLabel();
+      return;
+    }
+
+    if (nameValue.length > 80) {
+      showToast("Le nom ne doit pas dépasser 80 caractères.", "error");
+      restoreSubmitLabel();
+      return;
+    }
+
+    const descriptionValue = document.getElementById("cloth-desc").value.trim();
+    if (descriptionValue.length > 500) {
+      showToast("La description ne doit pas dépasser 500 caractères.", "error");
+      restoreSubmitLabel();
       return;
     }
 
@@ -428,24 +487,33 @@ addClothForm?.addEventListener("submit", async (e) => {
       colors: selectedColors,
       colorSource: "user",
       colorConfidence: colorResolution.colorConfidence,
-      description: document.getElementById("cloth-desc").value,
+      description: descriptionValue,
       imageUrl: imageUrl,
-      createdAt: serverTimestamp(),
     };
 
-    await addDoc(
-      collection(db, `users/${currentUser.uid}/clothes`),
-      clothData,
-    );
-
-    closeModal();
-    showToast("Vêtement ajouté avec succès !");
+    if (editingClothId) {
+      await updateDoc(doc(db, `users/${currentUser.uid}/clothes`, editingClothId), {
+        ...clothData,
+        updatedAt: serverTimestamp(),
+      });
+      closeModal();
+      showToast("Vêtement modifié avec succès !");
+    } else {
+      await addDoc(collection(db, `users/${currentUser.uid}/clothes`), {
+        ...clothData,
+        createdAt: serverTimestamp(),
+      });
+      closeModal();
+      showToast("Vêtement ajouté avec succès !");
+    }
   } catch (error) {
-    console.error("Erreur lors de l'ajout Firestore :", error);
-    showToast("Erreur lors de l'ajout", "error");
+    console.error("Erreur lors de l'enregistrement Firestore :", error);
+    showToast(
+      editingClothId ? "Erreur lors de la modification" : "Erreur lors de l'ajout",
+      "error",
+    );
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Ajouter";
+    restoreSubmitLabel();
   }
 });
 
@@ -709,7 +777,6 @@ function renderClothes() {
     filteredClothes.forEach((cloth) => {
       const card = document.createElement("div");
       card.className = "cloth-card";
-      const deleteButton = createDeleteButton(cloth.id, "Supprimer");
       const imageContainer = document.createElement("div");
       imageContainer.className = "cloth-img";
       if (cloth.imageUrl) {
@@ -765,13 +832,21 @@ function renderClothes() {
         description.textContent = cloth.description;
         info.appendChild(description);
       }
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "edit-cloth-btn";
+      editButton.dataset.editCloth = cloth.id;
+      editButton.textContent = "Modifier";
+      editButton.title = "Modifier ce vêtement";
+      info.appendChild(editButton);
+
       const cardDeleteButton = createDeleteButton(
         cloth.id,
         "Supprimer ce vêtement",
       );
       cardDeleteButton.className = "delete-btn delete-card-action";
       info.appendChild(cardDeleteButton);
-      card.append(deleteButton, imageContainer, info);
+      card.append(imageContainer, info);
       fragment.appendChild(card);
     });
     clothesGrid.replaceChildren(fragment);
@@ -779,8 +854,15 @@ function renderClothes() {
 }
 
 clothesGrid?.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-delete-cloth]");
-  if (button) deleteCloth(button.dataset.deleteCloth);
+  const editButton = event.target.closest("[data-edit-cloth]");
+  if (editButton) {
+    const cloth = allClothes.find((item) => item.id === editButton.dataset.editCloth);
+    openEditModal(cloth);
+    return;
+  }
+
+  const deleteButton = event.target.closest("[data-delete-cloth]");
+  if (deleteButton) deleteCloth(deleteButton.dataset.deleteCloth);
 });
 
 // Filtrage

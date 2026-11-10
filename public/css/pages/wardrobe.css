@@ -266,6 +266,35 @@
   display: none;
 }
 
+.edit-cloth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  min-height: 32px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 999px;
+  background: var(--ui-card);
+  color: var(--ui-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.edit-cloth-btn:hover {
+  border-color: #8a5a3b;
+  color: #8a5a3b;
+  transform: translateY(-1px);
+}
+
+.edit-cloth-btn:focus-visible {
+  outline: 2px solid #8a5a3b;
+  outline-offset: 2px;
+}
+
 .delete-card-action {
   display: flex;
   align-items: center;

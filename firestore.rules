@@ -3,9 +3,53 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Chaque utilisateur ne peut accéder qu'à ses propres données
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Validation serveur des vêtements : Firestore applique ces règles avant
+    // toute écriture, même si le client est contourné.
+    function isValidCloth(data) {
+      return data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 80
+        && data.category is string
+        && data.category in ['haut', 'bas', 'robe', 'manteau', 'chaussures', 'accessoires', 'ensemble']
+        && data.type is string
+        && data.type.size() <= 30
+        && (data.slot == null || data.slot in ['BASE', 'COUCHE', 'VESTE', 'BAS', 'ROBE', 'CHAUSSURES', 'ACCESSOIRE'])
+        && data.pattern is string
+        && data.pattern.size() <= 30
+        && data.colors is string
+        && data.colors.size() > 0
+        && data.colors.size() <= 200
+        && (!('description' in data) || (data.description is string && data.description.size() <= 500))
+        && (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() <= 1000))
+        && (!('colorSource' in data) || data.colorSource is string)
+        && (!('colorConfidence' in data) || data.colorConfidence is string);
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /clothes/{clothId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidCloth(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /outfits/{outfitId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Tout le reste est refusé par défaut.
+      match /{document=**} {
+        allow read, write: if false;
+      }
     }
   }
 }

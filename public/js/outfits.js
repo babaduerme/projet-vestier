@@ -1,6 +1,7 @@
 import { db } from "./config.js";
 import { initAuth } from "./auth.js";
 import { escapeHtml, showToast } from "./ui-utils.js";
+import { validateOutfitOnServer } from "./api-client.js";
 import {
   GARMENT_TYPES,
   SLOTS,
@@ -10,7 +11,8 @@ import {
   buildOutfit,
   validateOutfit,
   repairOrDiscardOutfit,
-  resolveChicOutfit,
+  resolveFormalOutfit,
+  explainMissingPieces,
   checkWardrobeCompleteness,
   isShirt,
   isFormalNeckwear,
@@ -225,11 +227,11 @@ function normalizeWardrobePiece(piece) {
 }
 
 function canComposeAnyOutfit(clothes) {
-  return checkWardrobeCompleteness(clothes).canCompose || unclassifiedClothes.length > 0;
+  return checkWardrobeCompleteness(clothes, "casual").canCompose || unclassifiedClothes.length > 0;
 }
 
 function buildPartialOutfit(clothes, styleName, weather) {
-  const completeness = checkWardrobeCompleteness(clothes);
+  const completeness = checkWardrobeCompleteness(clothes, styleName);
   if (unclassifiedClothes.length) {
     return {
       pieces: [],
@@ -237,12 +239,13 @@ function buildPartialOutfit(clothes, styleName, weather) {
       missingReason: `${unclassifiedClothes.length} vêtement(s) à classer`,
     };
   }
+  const missingReason = completeness.message
+    ? completeness.message.replace(/^information manquante\s*:\s*/i, "")
+    : explainMissingPieces(clothes, styleName)
+      || "une pièce compatible avec le style demandé";
   const missingSlots = completeness.missingSlots.length
     ? [...completeness.missingSlots]
-    : [SLOTS.BASE];
-  const missingReason = completeness.missingSlots.length
-    ? `${completeness.missingSlots.join(", ")}`
-    : "une pièce compatible avec le style demandé";
+    : [SLOTS.COUCHE];
   return { pieces: [], missingSlots, missingReason };
 }
 
@@ -750,11 +753,12 @@ async function generateSingleDayOutfit(dayKey) {
   showToast(`Génération pour ${day.label}...`);
   const weather = getWeatherForDay(day.key, dayIndex);
   let newOutfit = null;
+  let serverRejection = null;
 
   try {
-    const isChicVariant = styleName === "chic";
-    if (isChicVariant) {
-      const chicRes = resolveChicOutfit(userClothes, { weather });
+    const isFormalVariant = styleName === "chic" || styleName === "minimaliste";
+    if (isFormalVariant) {
+      const chicRes = resolveFormalOutfit(userClothes, { weather, style: styleName });
       if (chicRes.success) {
         newOutfit = {
           id: `outfit-${dayIndex + 1}`,
@@ -784,6 +788,14 @@ async function generateSingleDayOutfit(dayKey) {
       }
     }
 
+    if (newOutfit) {
+      const serverValidation = await validateOutfitOnServer(newOutfit);
+      if (serverValidation && !serverValidation.isValid) {
+        serverRejection = serverValidation.errors?.[0] || "tenue refusée par le serveur";
+        newOutfit = null;
+      }
+    }
+
     if (!newOutfit) {
       const partial = buildPartialOutfit(userClothes, styleName, weather);
       newOutfit = {
@@ -794,8 +806,10 @@ async function generateSingleDayOutfit(dayKey) {
         styleBadge: getStyleLabel(styleName),
         pieces: [],
         missingSlots: partial.missingSlots,
-        description: `Pièce manquante : ${partial.missingReason}`,
-        manque: partial.missingReason,
+        description: serverRejection
+          ? `Tenue refusée par le serveur : ${serverRejection}`
+          : `Pièce manquante : ${partial.missingReason}`,
+        manque: serverRejection || partial.missingReason,
         isError: true,
         weatherSummary: weather
           ? `Météo : ${weather.label} · ${weather.min}–${weather.max} °C · pluie ${weather.rain}%`
@@ -843,9 +857,17 @@ async function generateWeeklyOutfitsReliable() {
   });
 
   if (!canComposeAnyOutfit(userClothes)) {
+    const completeness = checkWardrobeCompleteness(userClothes, "casual");
+    const missingReason = completeness.message
+      ? completeness.message.replace(/^information manquante\s*:\s*/i, "")
+      : "une pièce compatible avec la couche chaude obligatoire (pull ou hoodie)";
     noClothesWarning?.classList.remove("hidden");
     outfitsContainer?.classList.add("hidden");
-    if (plannerStatus) plannerStatus.textContent = "Garde-robe vide ou incomplète.";
+    const warningText = document.getElementById("no-clothes-warning-text");
+    if (warningText) {
+      warningText.textContent = `Ta garde-robe ne contient pas encore les pièces nécessaires : ${missingReason}. Ajoute un haut et un bas, ou une robe, ainsi qu'une paire de chaussures et un pull ou un hoodie.`;
+    }
+    if (plannerStatus) plannerStatus.textContent = `Garde-robe incomplète : ${missingReason}.`;
     activeGenerationController = null;
     return;
   }
@@ -885,10 +907,10 @@ async function generateWeeklyOutfitsReliable() {
 
         let outfit = null;
         let specificFailureReason = null;
-        const isChicVariant = styleName === "chic";
+        const isFormalVariant = styleName === "chic" || styleName === "minimaliste";
 
-        if (isChicVariant) {
-          const chicRes = resolveChicOutfit(userClothes, { weather, avoidIds });
+        if (isFormalVariant) {
+          const chicRes = resolveFormalOutfit(userClothes, { weather, avoidIds, style: styleName });
           if (chicRes.success) {
             outfit = {
               id: `outfit-${dayIndex + 1}`,
@@ -917,6 +939,15 @@ async function generateWeeklyOutfitsReliable() {
             outfit.weatherSummary = weather
               ? `Météo : ${weather.label} · ${weather.min}–${weather.max} °C · pluie ${weather.rain}%`
               : "Météo non prise en compte";
+          }
+        }
+
+        if (outfit) {
+          const serverValidation = await validateOutfitOnServer(outfit);
+          if (serverValidation && !serverValidation.isValid) {
+            specificFailureReason =
+              serverValidation.errors?.[0] || "tenue refusée par le serveur";
+            outfit = null;
           }
         }
 
@@ -1152,59 +1183,19 @@ function scoreOutfitForStyle(outfit, styleName) {
   return avg + rockBonus;
 }
 
-function scorePieceForWeather(piece, weather) {
-  if (!weather) return 0.5;
-  const text = styleMateText(piece);
-  let score = 0.5;
-  const avgTemp = (Number(weather.min) + Number(weather.max)) / 2;
-  const isRainy =
-    Number(weather.rain) > 40 ||
-    /pluie|bruine|orage|rain|storm/.test(String(weather.type || ""));
-
-  if (avgTemp > 22) {
-    if (/t[- ]?shirt|debardeur|short|sandale|lin|soie|robe/.test(text)) score += 0.3;
-    if (/laine|velours|doudoune|manteau|boots|bottes/.test(text)) score -= 0.5;
-  } else if (avgTemp < 10) {
-    if (/laine|velours|doudoune|manteau|boots|bottes|pull|sweat/.test(text)) score += 0.3;
-    if (/short|sandale|debardeur/.test(text)) score -= 0.5;
-  }
-
-  if (isRainy) {
-    if (/impermeable|trench|cuir|parka|boots|bottes/.test(text)) score += 0.2;
-    if (/daim|suede|toile|sandale/.test(text)) score -= 0.4;
-  }
-  return Math.max(0, Math.min(1, score));
-}
-
 function isWarmWeather(weather) {
   return Number(weather?.max ?? weather?.temperature_max ?? 20) > 24;
 }
 
-function isOuterwear(piece) {
-  return (
-    piece.category === "manteau" ||
-    /manteau|veste|blouson|parka|trench|doudoune|jacket|coat/.test(
-      styleMateText(piece),
-    )
-  );
-}
-
 function outfitRespectsWeather(pieces, weather) {
   if (!weather) return true;
-  const min = Number(weather.min ?? weather.temperature_min);
   const rain = Number(weather.rain ?? weather.probabilite_pluie ?? 0);
   const precipitation = normalizeLabel(weather.precipitations || weather.type);
   const wet = rain > 50 || /bruine|pluie|neige|storm|orage/.test(precipitation);
-  const outer = pieces.some(isOuterwear);
-  const warmBase = pieces.some(
-    (piece) =>
-      ["pull", "sweat"].includes(piece.garmentType) ||
-      /pull|hoodie|sweat/.test(styleMateText(piece)),
-  );
-  const layered = outer || warmBase;
-  const hot = Number.isFinite(min) && min > 25;
 
-  if (hot && layered) return false;
+  // La couche chaude (pull ou hoodie) est obligatoire dans toutes les tenues,
+  // y compris par temps chaud : on ne rejette donc plus une tenue pour cause
+  // de superposition. Seule la pluie reste un critère d'incompatibilité.
   if (
     wet &&
     pieces.some(
@@ -1296,37 +1287,65 @@ function generateOutfits(
   };
 
   const isRockStyle = styleKey === "rock";
-  const rockGraphicTops = availableHauts.filter(styleMateIsGraphicTop);
+  const isFormalStyleKey = styleKey === "chic" || styleKey === "minimaliste";
+  const isNeckwearStyle = FORMAL_NECKWEAR_STYLES.has(styleKey);
+  const rockGraphicTops = availableHauts.filter(
+    (p) => normalizeGarmentSlot(p) === SLOTS.BASE && styleMateIsGraphicTop(p),
+  );
   const rockAccessories = availableAccessoires.filter(styleMateIsRockOrMetal);
+
+  // Uniquement des couches chaudes : un sweat ou un gilet ne satisfait pas la
+  // règle « pull ou hoodie ». En Chic/Minimaliste, seul le pull est autorisé.
+  const basePool = availableHauts.filter((p) => normalizeGarmentSlot(p) === SLOTS.BASE);
+  // Rock exclut la chemise formelle : on ne la propose pas comme base.
+  const styleBasePool = isRockStyle
+    ? basePool.filter((p) => p.type !== GARMENT_TYPES.CHEMISE)
+    : basePool;
+  const formalBasePool = basePool.filter(
+    (p) => p.type === GARMENT_TYPES.CHEMISE || p.type === GARMENT_TYPES.POLO,
+  );
+  const warmLayerPool = availableHauts.filter(
+    (p) =>
+      normalizeGarmentSlot(p) === SLOTS.COUCHE &&
+      (p.type === GARMENT_TYPES.PULL || p.type === GARMENT_TYPES.HOODIE),
+  );
+  const pullPool = warmLayerPool.filter((p) => p.type === GARMENT_TYPES.PULL);
 
   for (let index = 0; index < count * 8 && outfits.length < count; index += 1) {
     const pieces = [];
-    const useRobe = availableRobes.length > 0 && (availableHauts.length === 0 || index % 3 === 2);
+    const usableBasePool = isFormalStyleKey ? formalBasePool : styleBasePool;
+    const hasUsableBase = usableBasePool.length > 0 && availableBas.length > 0;
+    const useRobe =
+      availableRobes.length > 0 &&
+      (!hasUsableBase || (!isFormalStyleKey && index % 3 === 2));
 
     if (useRobe) {
-      const robe = pickCandidate(availableRobes, classified.filter((p) => p.category === "robe"), index);
+      const robe = pickCandidate(availableRobes, [], index);
       if (robe) pieces.push(robe);
+      // Une robe se porte avec un pull : un hoodie exige un t-shirt dessous.
+      const pull = pickCandidate(pullPool, [], index + 1);
+      if (pull) pieces.push(pull);
     } else {
-      const basePool = availableHauts.filter((p) => normalizeGarmentSlot(p) === SLOTS.BASE);
-      const couchePool = availableHauts.filter((p) => normalizeGarmentSlot(p) === SLOTS.COUCHE);
-
       let baseHaut = null;
       if (isRockStyle && rockGraphicTops.length) {
         baseHaut = rockGraphicTops[(offsetSeed + index) % rockGraphicTops.length];
       } else {
-        baseHaut = pickCandidate(basePool, availableHauts, index);
+        baseHaut = pickCandidate(
+          isFormalStyleKey ? formalBasePool : styleBasePool,
+          [],
+          index,
+        );
       }
+      if (!baseHaut) continue;
+      pieces.push(baseHaut);
 
-      let coucheHaut = null;
-      if (baseHaut && normalizeGarmentSlot(baseHaut) === SLOTS.COUCHE) {
-        coucheHaut = baseHaut;
-        baseHaut = pickCandidate(basePool, [], index + 1);
-      } else if (couchePool.length && (index % 2 === 1 || (weather && !isWarmWeather(weather)))) {
-        coucheHaut = pickCandidate(couchePool, [], index);
-      }
-
-      if (baseHaut) pieces.push(baseHaut);
-      if (coucheHaut && baseHaut) pieces.push(coucheHaut);
+      const baseIsTshirt = baseHaut.type === GARMENT_TYPES.TSHIRT;
+      // Un hoodie n'est compatible qu'avec un t-shirt. Avec une chemise, un
+      // polo ou un débardeur, seule une couche pull est valide.
+      const compatibleLayers =
+        !isFormalStyleKey && baseIsTshirt ? warmLayerPool : pullPool;
+      const coucheHaut = pickCandidate(compatibleLayers, [], index + 1);
+      if (coucheHaut) pieces.push(coucheHaut);
 
       const bas = pickCandidate(
         availableBas,
@@ -1335,6 +1354,13 @@ function generateOutfits(
       );
       if (bas) pieces.push(bas);
     }
+
+    const hasWarmLayer = pieces.some(
+      (piece) =>
+        normalizeGarmentSlot(piece) === SLOTS.COUCHE &&
+        (piece.type === GARMENT_TYPES.PULL || piece.type === GARMENT_TYPES.HOODIE),
+    );
+    if (!hasWarmLayer) continue;
 
     const chaussures = pickCandidate(
       availableChaussures,
@@ -1360,11 +1386,10 @@ function generateOutfits(
 
     const basePiece = pieces.find((p) => normalizeGarmentSlot(p) === SLOTS.BASE);
     const hasChemise = basePiece && isShirt(basePiece);
-    const isFormalStyle = FORMAL_NECKWEAR_STYLES.has(styleKey);
 
     const safeAccessories = availableAccessoires.filter((acc) => {
       if (isFormalNeckwear(acc)) {
-        return hasChemise && isFormalStyle;
+        return hasChemise && isNeckwearStyle;
       }
       return true;
     });
@@ -1384,7 +1409,12 @@ function generateOutfits(
     const validation = validateOutfit({ pieces, style: styleKey, weather });
     let finalPieces = pieces;
     if (!validation.isValid) {
-      const repaired = repairOrDiscardOutfit({ pieces, style: styleKey, weather });
+      const repaired = repairOrDiscardOutfit(
+        { pieces, style: styleKey, weather },
+        styleKey,
+        weather,
+        clothes,
+      );
       if (!repaired) continue;
       finalPieces = repaired.pieces;
     }
@@ -1415,17 +1445,57 @@ function generateOutfits(
   return outfits.slice(0, count);
 }
 
+/**
+ * Dernier verrou déterministe avant l'affichage : une tenue invalide est
+ * réparée si possible, sinon transformée en carte d'erreur explicite. Une
+ * tenue invalide n'est jamais rendue telle quelle.
+ */
+function ensureDisplayableOutfit(outfit) {
+  if (!outfit || outfit.isSkipped) return outfit;
+  if (!Array.isArray(outfit.pieces) || outfit.pieces.length === 0) return outfit;
+
+  const styleKey = normalizeRequestedStyle(outfit.style) || "casual";
+  const weather = outfit.weather || null;
+  const normalizedOutfit = { ...outfit, style: styleKey };
+  const validation = validateOutfit(normalizedOutfit, styleKey, weather);
+  if (validation.isValid) return outfit;
+
+  const repaired = repairOrDiscardOutfit(normalizedOutfit, styleKey, weather, userClothes);
+  if (repaired) {
+    const revalidation = validateOutfit(repaired, styleKey, weather);
+    if (revalidation.isValid) {
+      return { ...outfit, pieces: repaired.pieces, repaired: true };
+    }
+  }
+
+  const missingReason =
+    explainMissingPieces(userClothes, styleKey) ||
+    validation.errors[0] ||
+    "une combinaison valide avec les vêtements disponibles";
+  return {
+    ...outfit,
+    pieces: [],
+    isError: true,
+    missingSlots: validation.missingSlots.length ? validation.missingSlots : [SLOTS.COUCHE],
+    description: `Pièce manquante : ${missingReason}`,
+    manque: missingReason,
+  };
+}
+
 function renderOutfits(outfits, styleName, title = null) {
   if (!outfitsGrid) return;
-  const validCount = outfits.filter((o) => !o.isSkipped && !o.isError && o.pieces?.length).length;
-  outfitsGrid.classList.toggle("single-outfit", outfits.length === 1);
+  const displayOutfits = outfits.map(ensureDisplayableOutfit);
+  const validCount = displayOutfits.filter(
+    (o) => !o.isSkipped && !o.isError && o.pieces?.length,
+  ).length;
+  outfitsGrid.classList.toggle("single-outfit", displayOutfits.length === 1);
   if (outfitsTitle) {
     outfitsTitle.textContent =
       title || (validCount > 0 ? `Ta semaine (${validCount} tenues composées)` : "Tes tenues");
   }
   outfitsGrid.replaceChildren();
 
-  outfits.forEach((outfit, index) => {
+  displayOutfits.forEach((outfit, index) => {
     const isMissing = !outfit.pieces || outfit.pieces.length === 0;
     const isSkipped = Boolean(outfit.isSkipped);
     const isError = Boolean(outfit.isError);
