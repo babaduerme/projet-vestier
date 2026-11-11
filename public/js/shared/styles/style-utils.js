@@ -1,5 +1,5 @@
 // style-utils.js – normalisation des styles et libellés partagés.
-import { styles as STYLE_CATALOG } from "./styles.config.js";
+import { styles as STYLE_CATALOG } from "./styles-config.js";
 import { canonicalStyleKey } from "./style-rules.js";
 
 export const CANONICAL_STYLES = STYLE_CATALOG.map((style) => ({

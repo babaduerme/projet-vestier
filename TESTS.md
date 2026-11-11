@@ -44,7 +44,7 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 
 ### Cas 2 — Pages et assets servis
 
-- **Action** : `GET /`, `GET /outfits.html`, `GET /js/outfit-matcher.js`.
+- **Action** : `GET /`, `GET /outfits.html`, `GET /js/shared/outfit-matcher.js`.
 - **Attendu** : `200`, types MIME corrects, HTML contenant `StyleAI`.
 - **Résultat** : Pass.
 - **Référence** : test « le serveur sert l'application statique ».

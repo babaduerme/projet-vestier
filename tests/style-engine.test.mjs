@@ -5,8 +5,8 @@ import {
   filterWardrobe,
   normalizeCategory,
   composeOutfit,
-} from "../public/js/styleEngine.js";
-import { GARMENT_TYPES, detectGarmentType } from "../public/js/outfit-matcher.js";
+} from "../public/js/shared/styles/style-engine.js";
+import { GARMENT_TYPES, detectGarmentType } from "../public/js/shared/outfit-matcher.js";
 
 const wardrobe = [
   { id: "tee", name: "t-shirt blanc" },

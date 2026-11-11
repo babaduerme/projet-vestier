@@ -168,7 +168,7 @@ Navigateur
 Serveur Node (server.js)
   ├─ fichiers statiques public/
   ├─ API JSON /api/outfits/*
-  └─ importe public/js/outfit-matcher.js (règles pures)
+  └─ importe public/js/shared/outfit-matcher.js (règles pures)
         │
 Firestore
   └─ users/{uid}/clothes, outfits, settings

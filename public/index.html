@@ -101,7 +101,7 @@
   </footer>
 </main>
 <script type="module">
-  import { auth } from "./js/config.js";
+  import { auth } from "./js/core/config.js";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
   onAuthStateChanged(auth, (user) => {
     if (user) {

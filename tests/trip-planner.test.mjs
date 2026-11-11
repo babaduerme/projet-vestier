@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { planTrip, CABIN_MAX_PIECES } from "../public/js/trip-planner.js";
+import { planTrip } from "../public/js/trip/trip-planner.js";
 import {
   GARMENT_TYPES,
   validateOutfit,
-} from "../public/js/outfit-matcher.js";
+} from "../public/js/shared/outfit-matcher.js";
 
 const wardrobe = [
   { id: "tee", name: "t-shirt blanc", category: "haut", colors: "blanc" },

@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { generateOutfits } from "../public/js/outfit-generator.js";
+import { generateOutfits } from "../public/js/shared/outfit-generator.js";
 import {
   GARMENT_TYPES,
   SLOTS,
   validateOutfit,
-} from "../public/js/outfit-matcher.js";
+} from "../public/js/shared/outfit-matcher.js";
 
 const wardrobe = [
   { id: "tee", name: "t-shirt blanc", colors: "blanc" },

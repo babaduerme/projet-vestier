@@ -9,7 +9,7 @@ import {
   checkWardrobeCompleteness,
   validateMatcherResponse,
   OUTFIT_MATCHER_PROMPT,
-} from "../public/js/outfit-matcher.js";
+} from "../public/js/shared/outfit-matcher.js";
 
 const wardrobe = [
   { id: "tee", name: "t-shirt blanc", colors: "blanc" },

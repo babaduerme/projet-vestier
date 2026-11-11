@@ -16,15 +16,15 @@ images, Node natif pour le serveur/API, `node:test` pour les tests.
 - `firebase emulators:start --only hosting --project demo-styleai` : statique seul.
 
 ## Architecture
-- `public/js/outfit-matcher.js` : règles métier pures (types, slots, validation,
+- `public/js/shared/outfit-matcher.js` : règles métier pures (types, slots, validation,
   réparation, résolveur Chic/Minimaliste, validation des réponses IA).
-- `public/js/outfit-generator.js` : génération pure partagée semaine + valise.
-- `public/js/trip-planner.js` : sélection minimale des pièces d'une valise.
-- `public/js/trip.js` : page mode valise, météo destination et Firestore trips.
-- `public/js/outfits.js` : planning, génération, verrou d'affichage final.
-- `public/js/wardrobe.js` : CRUD Firestore de la garde-robe (create/read/update/delete).
+- `public/js/shared/outfit-generator.js` : génération pure partagée semaine + valise.
+- `public/js/trip/trip-planner.js` : sélection minimale des pièces d'une valise.
+- `public/js/trip/trip.js` : page mode valise, météo destination et Firestore trips.
+- `public/js/outfits/index.js` : planning, génération, verrou d'affichage final.
+- `public/js/wardrobe/wardrobe.js` : CRUD Firestore de la garde-robe (create/read/update/delete).
 - `server.js` : serveur HTTP, fichiers statiques, API de validation métier.
-- `public/js/api-client.js` : appel de l'API depuis le navigateur.
+- `public/js/core/api-client.js` : appel de l'API depuis le navigateur.
 - `firestore.rules` : sécurité et validation serveur Firestore.
 
 ## Règles métier non négociables

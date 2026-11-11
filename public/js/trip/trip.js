@@ -1,12 +1,12 @@
 // trip.js – mode valise : formulaire, météo destination, planification,
 // sauvegarde Firestore et rendu accessible.
-import { db } from "./config.js";
-import { initAuth } from "./auth.js";
-import { showToast } from "./ui-utils.js";
-import { GARMENT_TYPES, migrateGarment } from "./outfit-matcher.js";
-import { fetchWeatherForDateRange, geocodeCity } from "./weather.js";
+import { db } from "../core/config.js";
+import { initAuth } from "../auth/auth.js";
+import { showToast } from "../core/ui-utils.js";
+import { GARMENT_TYPES, migrateGarment } from "../shared/outfit-matcher.js";
+import { fetchWeatherForDateRange, geocodeCity } from "../shared/weather/weather.js";
 import { CABIN_MAX_PIECES, planTrip } from "./trip-planner.js";
-import { getStyleLabel } from "./style-utils.js";
+import { getStyleLabel } from "../shared/styles/style-utils.js";
 import {
   addDoc,
   collection,

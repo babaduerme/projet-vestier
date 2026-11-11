@@ -27,7 +27,7 @@ validation métier.
 - Node.js 20 ou supérieur (testé avec Node 24).
 - npm.
 - Un navigateur moderne.
-- Un projet Firebase configuré dans `public/js/config.js` (le projet
+- Un projet Firebase configuré dans `public/js/core/config.js` (le projet
   `vestiairedevetement` est déjà utilisé par l'application).
 - Une connexion Internet pour Firebase, Cloudinary et les modèles d'analyse
   d'image.

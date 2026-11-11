@@ -1,13 +1,13 @@
 // trip-planner.js – sélection d'une valise minimale et cohérente.
 // Réutilise generateOutfits et le validateur déterministe. Aucun accès DOM.
-import { generateOutfits } from "./outfit-generator.js";
+import { generateOutfits } from "../shared/outfit-generator.js";
 import {
   GARMENT_TYPES,
   explainMissingPieces,
   migrateGarment,
   validateOutfit,
-} from "./outfit-matcher.js";
-import { getStyleLabel, normalizeRequestedStyle } from "./style-utils.js";
+} from "../shared/outfit-matcher.js";
+import { getStyleLabel, normalizeRequestedStyle } from "../shared/styles/style-utils.js";
 
 export const CABIN_MAX_PIECES = 10;
 const MAX_CANDIDATES_PER_STYLE = 10;

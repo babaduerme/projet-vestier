@@ -2,9 +2,9 @@ import {
   db,
   CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_UPLOAD_PRESET,
-} from "./config.js";
-import { initAuth } from "./auth.js";
-import { showToast } from "./ui-utils.js";
+} from "../core/config.js";
+import { initAuth } from "../auth/auth.js";
+import { showToast } from "../core/ui-utils.js";
 import { extractDominantColors } from "./color-analysis.js";
 import { classifyGarment } from "./garment-classifier.js";
 import {
@@ -15,7 +15,7 @@ import {
   migrateGarment,
   normalizeGarmentSlot,
   resolveGarmentColors,
-} from "./outfit-matcher.js";
+} from "../shared/outfit-matcher.js";
 import {
   collection,
   addDoc,

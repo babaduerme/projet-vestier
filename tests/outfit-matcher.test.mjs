@@ -15,7 +15,7 @@ import {
   resolveChicOutfit,
   checkWardrobeCompleteness,
   OUTFIT_MATCHER_PROMPT,
-} from "../public/js/outfit-matcher.js";
+} from "../public/js/shared/outfit-matcher.js";
 
 // ============================================================================
 // DRESSING DE TEST OFFICIEL (ÉTAPE 2)

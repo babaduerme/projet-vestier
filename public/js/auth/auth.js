@@ -1,4 +1,4 @@
-import { auth } from "./config.js";
+import { auth } from "../core/config.js";
 import {
   onAuthStateChanged,
   signOut,

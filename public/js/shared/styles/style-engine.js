@@ -1,11 +1,11 @@
 // styleEngine.js – logique pure du catalogue de styles
 // Aucun accès au DOM, uniquement des fonctions testables.
-import { styles } from "./styles.config.js";
+import { styles } from "./styles-config.js";
 import {
   GARMENT_TYPES,
   STREETWEAR_BASE_TYPES,
   detectGarmentType,
-} from "./outfit-matcher.js";
+} from "../outfit-matcher.js";
 
 function normalizeLabel(value) {
   return String(value ?? "")

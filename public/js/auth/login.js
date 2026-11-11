@@ -1,5 +1,5 @@
 /* ===== Authentification ===== */
-import { auth } from "./config.js";
+import { auth } from "../core/config.js";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,

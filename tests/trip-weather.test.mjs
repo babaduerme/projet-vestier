@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   fetchWeatherForDateRange,
   geocodeCity,
-} from "../public/js/weather.js";
+} from "../public/js/shared/weather/weather.js";
 
 test("geocodeCity transforme la réponse Open-Meteo en lieu utilisable", async () => {
   const originalFetch = globalThis.fetch;

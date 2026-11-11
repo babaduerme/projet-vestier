@@ -1,7 +1,7 @@
-import { db } from "./config.js";
-import { initAuth } from "./auth.js";
-import { escapeHtml, showToast } from "./ui-utils.js";
-import { validateOutfitOnServer } from "./api-client.js";
+import { db } from "../core/config.js";
+import { initAuth } from "../auth/auth.js";
+import { escapeHtml, showToast } from "../core/ui-utils.js";
+import { validateOutfitOnServer } from "../core/api-client.js";
 import {
   GARMENT_TYPES,
   SLOTS,
@@ -14,7 +14,7 @@ import {
   checkWardrobeCompleteness,
   isShirt,
   isFormalNeckwear,
-} from "./outfit-matcher.js";
+} from "../shared/outfit-matcher.js";
 import {
   getForecastForDay,
   getWeeklyWeather,
@@ -24,7 +24,7 @@ import {
   getSavedWeatherLocation,
   subscribeWeatherChange,
   DEFAULT_WEATHER_LOCATION,
-} from "./weather.js";
+} from "../shared/weather/weather.js";
 import {
   collection,
   doc,
@@ -32,12 +32,12 @@ import {
   onSnapshot,
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { generateOutfits } from "./outfit-generator.js";
+import { generateOutfits } from "../shared/outfit-generator.js";
 import {
   CANONICAL_STYLES,
   getStyleLabel,
   normalizeRequestedStyle,
-} from "./style-utils.js";
+} from "../shared/styles/style-utils.js";
 
 const WEEK_DAYS = [
   { key: "monday", label: "Lundi", dayNum: 1 },

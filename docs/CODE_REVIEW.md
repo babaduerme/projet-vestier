@@ -97,7 +97,7 @@ les défauts assumés restent listés et hiérarchisés.
 ### M6. Identifiants publics dans le code — assumé
 
 - **Constat** : clé Web Firebase et preset Cloudinary non signé dans
-  `public/js/config.js`.
+  `public/js/core/config.js`.
 - **Analyse** : ce sont des identifiants publics côté client. La sécurité repose
   sur les règles Firestore et les restrictions de clé/domaine. Aucune clé privée
   n'est présente.

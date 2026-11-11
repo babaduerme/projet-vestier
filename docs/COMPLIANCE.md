@@ -7,7 +7,7 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
 
 | Exigence | Statut | Preuve / action |
 | --- | --- | --- |
-| Interface web avec plusieurs écrans et navigation cohérente | Conforme | `index.html`, `login.html`, `wardrobe.html`, `outfits.html`, `404.html`, `auth.js`. |
+| Interface web avec plusieurs écrans et navigation cohérente | Conforme | `index.html`, `login.html`, `wardrobe.html`, `outfits.html`, `trip.html`, `404.html`, `auth.js`. |
 | Serveur applicatif exposant une API, logique métier côté serveur | Conforme | `server.js` expose `/api/health`, `/api/outfits/validate`, `/api/outfits/check-wardrobe`, `/api/outfits/chic`, `/api/outfits/validate-response`. Il importe les règles métier de `outfit-matcher.js`. |
 | Base de données et données persistantes | Conforme | Firestore : `users/{uid}/clothes`, `outfits/currentWeek`, `settings/weeklyStyles`. |
 | CRUD complet sur au moins une entité | Conforme | Garde-robe : création, lecture, modification (bouton « Modifier » + `updateDoc`), suppression. |

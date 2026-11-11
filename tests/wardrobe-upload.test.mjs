@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const html = await readFile(new URL("../public/wardrobe.html", import.meta.url), "utf8");
-const script = await readFile(new URL("../public/js/wardrobe.js", import.meta.url), "utf8");
+const script = await readFile(new URL("../public/js/wardrobe/wardrobe.js", import.meta.url), "utf8");
 
 test("la modale propose la caméra et le sélecteur de documents", () => {
   assert.match(html, /id="camera-trigger"/);

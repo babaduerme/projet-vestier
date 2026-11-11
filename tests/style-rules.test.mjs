@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   STYLE_RULES,
   canonicalStyleKey,
-} from "../public/js/style-rules.js";
+} from "../public/js/shared/styles/style-rules.js";
 
 test("normalise les cinq styles conservés", () => {
   assert.equal(canonicalStyleKey("Casual"), "casual");

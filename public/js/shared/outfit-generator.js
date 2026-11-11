@@ -15,8 +15,8 @@ import {
   scoreStyle,
   validateOutfit,
 } from "./outfit-matcher.js";
-import { canonicalStyleKey as canonicalStyleKeyFromRules } from "./style-rules.js";
-import { getStyleLabel, normalizeRequestedStyle } from "./style-utils.js";
+import { canonicalStyleKey as canonicalStyleKeyFromRules } from "./styles/style-rules.js";
+import { getStyleLabel, normalizeRequestedStyle } from "./styles/style-utils.js";
 
 function normalizeLabel(value) {
   return String(value ?? "")

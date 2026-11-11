@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const html = await readFile(new URL("../public/trip.html", import.meta.url), "utf8");
-const script = await readFile(new URL("../public/js/trip.js", import.meta.url), "utf8");
+const script = await readFile(new URL("../public/js/trip/trip.js", import.meta.url), "utf8");
 
 test("le formulaire valise est accessible et complet", () => {
   assert.match(html, /<label for="trip-destination">/);

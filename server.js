@@ -17,7 +17,7 @@ import {
   resolveFormalOutfit,
   validateMatcherResponse,
   validateOutfit,
-} from "./public/js/outfit-matcher.js";
+} from "./public/js/shared/outfit-matcher.js";
 
 const PUBLIC_DIR = resolve(fileURLToPath(new URL("./public/", import.meta.url)));
 const DEFAULT_PORT = Number(process.env.PORT) || 5000;

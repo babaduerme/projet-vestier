@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { weatherType, weatherEmoji, weatherIconSvg, DEFAULT_WEATHER_LOCATION } from "../public/js/weather.js";
-import { canonicalStyleKey, STYLE_RULES, STYLE_COLOR_PALETTES } from "../public/js/style-rules.js";
+import { weatherType, weatherEmoji, weatherIconSvg, DEFAULT_WEATHER_LOCATION } from "../public/js/shared/weather/weather.js";
+import { canonicalStyleKey, STYLE_RULES, STYLE_COLOR_PALETTES } from "../public/js/shared/styles/style-rules.js";
 
 test("weatherType identifie correctement la pluie, la tempête, la neige et le vent", () => {
   assert.equal(weatherType(61), "rain");
