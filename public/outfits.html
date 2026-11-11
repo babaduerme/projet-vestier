@@ -128,6 +128,14 @@
 
       </section>
 
+      <section id="saved-week-panel" class="saved-week-panel" aria-labelledby="saved-week-title">
+        <div class="saved-week-heading">
+          <h2 id="saved-week-title">Mes semaines sauvegardées</h2>
+          <span id="saved-week-count" class="trip-count" aria-live="polite">0</span>
+        </div>
+        <div id="saved-week-list" class="saved-week-list" aria-live="polite"></div>
+      </section>
+
       <section id="no-clothes-warning" class="hidden">
         <p id="no-clothes-warning-text">
           Ta garde-robe ne contient pas encore les pièces nécessaires. Ajoute un
@@ -140,7 +148,12 @@
       <section id="outfits-container" class="hidden">
         <div class="outfits-header-bar">
           <h2 id="outfits-title">Tes 7 tenues</h2>
-          <span id="outfits-saved-indicator" class="outfits-saved-indicator"></span>
+          <div class="outfits-save-actions">
+            <span id="outfits-saved-indicator" class="outfits-saved-indicator" role="status" aria-live="polite"></span>
+            <button id="save-week-btn" class="btn btn-primary" type="button" disabled>
+              Sauvegarder ma semaine
+            </button>
+          </div>
         </div>
         <div id="outfits-grid" class="outfits-grid">
           <!-- Outfits will be injected here -->
@@ -158,7 +171,7 @@
 
     <script
       type="module"
-      src="js/outfits.js"
+      src="js/outfits/index.js"
     ></script>
   </body>
 </html>

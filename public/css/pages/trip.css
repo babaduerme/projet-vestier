@@ -95,7 +95,7 @@
 
 .trip-field input:focus-visible,
 .trip-style-option input:focus-visible + span,
-.trip-capacity-option input:focus-visible,
+.trip-laundry-option input:focus-visible,
 .trip-suitcase-item input:focus-visible,
 .saved-trip-btn:focus-visible,
 .trip-day-card:focus-visible {
@@ -158,7 +158,7 @@
   accent-color: #2f6b4f;
 }
 
-.trip-capacity-option {
+.trip-laundry-option {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -168,13 +168,8 @@
   font-size: 0.9rem;
 }
 
-.trip-capacity-option input[type="radio"] {
-  accent-color: #8a5a3b;
-}
-
-.trip-capacity-option input[type="number"] {
-  width: 84px;
-  min-height: 38px;
+.trip-laundry-option input[type="checkbox"] {
+  accent-color: #2f6b4f;
 }
 
 .trip-status {

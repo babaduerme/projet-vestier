@@ -26,11 +26,14 @@ import {
   DEFAULT_WEATHER_LOCATION,
 } from "../shared/weather/weather.js";
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
   setDoc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { generateOutfits } from "../shared/outfit-generator.js";
 import {
@@ -48,6 +51,7 @@ const WEEK_DAYS = [
   { key: "saturday", label: "Samedi", dayNum: 6 },
   { key: "sunday", label: "Dimanche", dayNum: 0 },
 ];
+const ALTERNATIVE_STYLES = ["casual", "rock", "streetwear"];
 
 let currentUser = null;
 let userClothes = [];
@@ -55,6 +59,7 @@ let unclassifiedClothes = [];
 let stopClothesListener = null;
 let weeklyStyles = {};
 let latestGeneratedOutfits = [];
+let isSavingWeeklyOutfits = false;
 let generationVersion = 0;
 let activeGenerationController = null;
 
@@ -70,6 +75,13 @@ const outfitsContainer = document.getElementById("outfits-container");
 const outfitsGrid = document.getElementById("outfits-grid");
 const outfitsTitle = document.getElementById("outfits-title");
 const outfitsSavedIndicator = document.getElementById("outfits-saved-indicator");
+const saveWeekButton = document.getElementById("save-week-btn");
+const savedWeekPanel = document.getElementById("saved-week-panel");
+const savedWeekCount = document.getElementById("saved-week-count");
+const savedWeekList = document.getElementById("saved-week-list");
+let savedWeekSnapshot = null;
+let activeSavedWeekId = null;
+let savedWeeks = [];
 const weeklyPlanner = document.getElementById("weekly-style-planner");
 const plannerStatus = document.getElementById("planner-status");
 const todayStyleLabel = document.getElementById("today-style-label");
@@ -536,8 +548,17 @@ async function saveWeeklyStyles() {
  * Enregistre les tenues générées dans Firestore et localStorage
  * @param {Array<any>} outfits
  */
-async function saveWeeklyOutfits(outfits) {
+async function saveWeeklyOutfits(outfits, notify = false) {
   latestGeneratedOutfits = outfits;
+  if (!currentUser) {
+    if (notify) showToast("Connecte-toi pour sauvegarder ta semaine.", "error");
+    return false;
+  }
+  if (!Array.isArray(outfits) || outfits.length === 0) {
+    if (notify) showToast("Génère au moins une tenue avant de sauvegarder.", "error");
+    return false;
+  }
+  if (isSavingWeeklyOutfits) return false;
   const storageKey = currentUser
     ? `styleai_weekly_outfits_${currentUser.uid}`
     : "styleai_weekly_outfits_guest";
@@ -553,20 +574,100 @@ async function saveWeeklyOutfits(outfits) {
     // ignore
   }
 
-  if (!currentUser) return;
+  isSavingWeeklyOutfits = true;
+  if (saveWeekButton) {
+    saveWeekButton.disabled = true;
+    saveWeekButton.textContent = "Sauvegarde en cours…";
+  }
   try {
-    await setDoc(
-      doc(db, `users/${currentUser.uid}/outfits`, "currentWeek"),
-      payload,
-      { merge: true },
-    );
+    const savedWeeksRef = collection(db, `users/${currentUser.uid}/outfits`);
+    if (activeSavedWeekId) {
+      await updateDoc(doc(db, `users/${currentUser.uid}/outfits`, activeSavedWeekId), payload);
+    } else {
+      const savedWeekRef = await addDoc(savedWeeksRef, payload);
+      activeSavedWeekId = savedWeekRef.id;
+    }
     if (outfitsSavedIndicator) {
       outfitsSavedIndicator.textContent = "✓ Tenues sauvegardées";
     }
+    if (notify) showToast("Ta semaine est sauvegardée.");
+    return true;
   } catch (error) {
     console.warn("[StyleAI] Erreur sauvegarde tenues Firestore :", error);
+    if (outfitsSavedIndicator) outfitsSavedIndicator.textContent = "Semaine non sauvegardée";
+    if (notify) showToast("Impossible de sauvegarder ta semaine. Réessaie.", "error");
+    return false;
+  } finally {
+    isSavingWeeklyOutfits = false;
+    if (saveWeekButton) {
+      saveWeekButton.disabled = !currentUser || latestGeneratedOutfits.length === 0;
+      saveWeekButton.textContent = "Sauvegarder ma semaine";
+    }
   }
 }
+
+function markWeeklyOutfitsChanged(outfits) {
+  latestGeneratedOutfits = outfits;
+  if (saveWeekButton) saveWeekButton.disabled = !currentUser || !outfits.length;
+  if (outfitsSavedIndicator) {
+    outfitsSavedIndicator.textContent = activeSavedWeekId
+      ? "Modifications non enregistrées"
+      : "Semaine non sauvegardée";
+  }
+}
+
+function renderSavedWeeks() {
+  if (!savedWeekPanel || !savedWeekList) return;
+  savedWeekPanel.classList.toggle("hidden", savedWeeks.length === 0);
+  if (savedWeekCount) savedWeekCount.textContent = String(savedWeeks.length);
+  savedWeekList.replaceChildren();
+  for (const savedWeek of savedWeeks) {
+    const card = document.createElement("article");
+    card.className = "saved-week-item";
+    const title = document.createElement("h4");
+    title.className = "saved-week-title";
+    title.textContent = savedWeek.title || "Ma semaine";
+    const openButton = document.createElement("button");
+    openButton.type = "button";
+    openButton.dataset.openWeek = savedWeek.id;
+    openButton.textContent = "Rouvrir";
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.dataset.deleteWeek = savedWeek.id;
+    deleteButton.textContent = "Supprimer";
+    card.append(title, openButton, deleteButton);
+    savedWeekList.append(card);
+  }
+}
+
+savedWeekList?.addEventListener("click", (event) => {
+  const openButton = event.target.closest("[data-open-week]");
+  const deleteButton = event.target.closest("[data-delete-week]");
+  if (openButton) {
+    const savedWeek = savedWeeks.find((week) => week.id === openButton.dataset.openWeek);
+    if (!savedWeek) return;
+    activeSavedWeekId = savedWeek.id === "local-cache" ? null : savedWeek.id;
+    latestGeneratedOutfits = savedWeek.outfits || [];
+    renderWeeklyOutfits(latestGeneratedOutfits);
+    outfitsContainer?.classList.remove("hidden");
+    if (outfitsSavedIndicator) outfitsSavedIndicator.textContent = "Tenues enregistrées";
+    return;
+  }
+  if (!deleteButton || !currentUser) return;
+  const savedWeek = savedWeeks.find((week) => week.id === deleteButton.dataset.deleteWeek);
+  if (!savedWeek) return;
+  if (savedWeek.id === "local-cache") {
+    savedWeeks = savedWeeks.filter((week) => week.id !== savedWeek.id);
+    renderSavedWeeks();
+    return;
+  }
+  void deleteDoc(doc(db, `users/${currentUser.uid}/outfits`, savedWeek.id)).then(() => {
+    if (activeSavedWeekId === savedWeek.id) activeSavedWeekId = null;
+  }).catch((error) => {
+    console.warn("[StyleAI] Impossible de supprimer la semaine :", error);
+    showToast("Impossible de supprimer cette semaine.", "error");
+  });
+});
 
 /**
  * Charge les tenues déjà sauvegardées au chargement de la page
@@ -576,39 +677,25 @@ async function loadSavedOutfits() {
     ? `styleai_weekly_outfits_${currentUser.uid}`
     : "styleai_weekly_outfits_guest";
 
-  let savedData = null;
-
   try {
-    const cached = localStorage.getItem(storageKey);
-    if (cached) {
-      savedData = JSON.parse(cached);
+    const cached = JSON.parse(localStorage.getItem(storageKey) || "null");
+    if (Array.isArray(cached?.outfits) && cached.outfits.length) {
+      savedWeeks = [{ ...cached, id: "local-cache", title: "Semaine sauvegardée sur cet appareil" }];
     }
-  } catch {
-    // ignore
-  }
-
-  if (currentUser) {
-    try {
-      const snap = await getDoc(
-        doc(db, `users/${currentUser.uid}/outfits`, "currentWeek"),
-      );
-      if (snap.exists()) {
-        savedData = snap.data();
-      }
-    } catch (e) {
-      console.warn("[StyleAI] Impossible de lire les tenues distantes :", e);
-    }
-  }
-
-  if (savedData?.outfits && Array.isArray(savedData.outfits) && savedData.outfits.length > 0) {
-    latestGeneratedOutfits = savedData.outfits;
-    renderWeeklyOutfits(latestGeneratedOutfits);
-    outfitsContainer?.classList.remove("hidden");
-    if (outfitsSavedIndicator) {
-      outfitsSavedIndicator.textContent = "Tenues enregistrées";
-    }
-  }
+  } catch { /* cache local absent ou invalide */ }
+  if (!currentUser) return renderSavedWeeks();
+  onSnapshot(collection(db, `users/${currentUser.uid}/outfits`), (snapshot) => {
+    savedWeeks = snapshot.docs.map((savedWeek) => ({ id: savedWeek.id, ...savedWeek.data() }));
+    renderSavedWeeks();
+  }, (error) => {
+    console.warn("[StyleAI] Impossible de lire les semaines sauvegardées :", error);
+    renderSavedWeeks();
+  });
 }
+
+saveWeekButton?.addEventListener("click", () => {
+  void saveWeeklyOutfits(latestGeneratedOutfits, true);
+});
 
 function loadUserClothes() {
   stopClothesListener?.();
@@ -727,7 +814,7 @@ function makeSkippedDayOutfit(day) {
  * Génère une tenue pour un jour précis (utilisé pour les réessais jour par jour)
  * @param {string} dayKey
  */
-async function generateSingleDayOutfit(dayKey) {
+async function generateSingleDayOutfit(dayKey, { silent = false } = {}) {
   const dayIndex = WEEK_DAYS.findIndex((d) => d.key === dayKey);
   if (dayIndex === -1) return;
   const day = WEEK_DAYS[dayIndex];
@@ -743,6 +830,7 @@ async function generateSingleDayOutfit(dayKey) {
   const weather = getWeatherForDay(day.key, dayIndex);
   let newOutfit = null;
   let serverRejection = null;
+  let resolverMissingSlot = null;
 
   try {
     const isFormalVariant = styleName === "chic" || styleName === "minimaliste";
@@ -762,6 +850,9 @@ async function generateSingleDayOutfit(dayKey) {
             ? `Météo : ${weather.label} · ${weather.min}–${weather.max} °C · pluie ${weather.rain}%`
             : "Météo non prise en compte",
         };
+      } else {
+        serverRejection = chicRes.message;
+        resolverMissingSlot = chicRes.missingSlot;
       }
     }
 
@@ -794,7 +885,7 @@ async function generateSingleDayOutfit(dayKey) {
         style: styleName,
         styleBadge: getStyleLabel(styleName),
         pieces: [],
-        missingSlots: partial.missingSlots,
+        missingSlots: resolverMissingSlot ? [resolverMissingSlot] : partial.missingSlots,
         description: serverRejection
           ? `Tenue refusée par le serveur : ${serverRejection}`
           : `Pièce manquante : ${partial.missingReason}`,
@@ -820,12 +911,36 @@ async function generateSingleDayOutfit(dayKey) {
     }
 
     renderWeeklyOutfits(updated);
-    await saveWeeklyOutfits(updated);
-    showToast(`Tenue de ${day.label} mise à jour !`);
+    markWeeklyOutfitsChanged(updated);
+    if (!silent) showToast(`Tenue de ${day.label} mise à jour !`);
   } catch (error) {
     console.error(`Erreur réessai ${day.label} :`, error);
-    showToast(`Échec pour ${day.label}`, "error");
+    if (!silent) showToast(`Échec pour ${day.label}`, "error");
   }
+}
+
+async function generateDayWithAlternativeStyle(dayKey, styleKey) {
+  if (!ALTERNATIVE_STYLES.includes(styleKey)) return;
+  weeklyStyles[dayKey] = styleKey;
+  updateDayCardStyleUI(dayKey, styleKey);
+  updateTodayStyle();
+  updateGenerateButtonState();
+  await saveWeeklyStyles();
+  await generateSingleDayOutfit(dayKey);
+}
+
+function getOutfitPieceLabel(piece) {
+  const slotLabels = {
+    [SLOTS.BASE]: "Première couche",
+    [SLOTS.COUCHE]: "Seconde couche",
+    [SLOTS.VESTE]: "Manteau / veste",
+    [SLOTS.BAS]: "Bas",
+    [SLOTS.ROBE]: "Robe",
+    [SLOTS.CHAUSSURES]: "Chaussures",
+    [SLOTS.ACCESSOIRE]: "Accessoire",
+  };
+  const category = slotLabels[normalizeGarmentSlot(piece)] || piece.category;
+  return [category, piece.colors].filter(Boolean).join(" · ");
 }
 
 /**
@@ -898,6 +1013,7 @@ async function generateWeeklyOutfitsReliable() {
 
         let outfit = null;
         let specificFailureReason = null;
+        let resolverMissingSlot = null;
         const isFormalVariant = styleName === "chic" || styleName === "minimaliste";
 
         if (isFormalVariant) {
@@ -918,6 +1034,7 @@ async function generateWeeklyOutfitsReliable() {
             };
           } else {
             specificFailureReason = chicRes.message;
+            resolverMissingSlot = chicRes.missingSlot;
           }
         }
 
@@ -959,7 +1076,7 @@ async function generateWeeklyOutfitsReliable() {
             style: styleName,
             styleBadge: getStyleLabel(styleName),
             pieces: [],
-            missingSlots: partial.missingSlots,
+            missingSlots: resolverMissingSlot ? [resolverMissingSlot] : partial.missingSlots,
             description: specificFailureReason || `Pièce manquante : ${partial.missingReason}`,
             manque: specificFailureReason
               ? specificFailureReason.replace(/^il manque\s*:\s*/i, "")
@@ -994,7 +1111,14 @@ async function generateWeeklyOutfitsReliable() {
 
     renderWeeklyOutfits(weeklyOutfits);
     outfitsContainer?.classList.remove("hidden");
-    await saveWeeklyOutfits(weeklyOutfits);
+    markWeeklyOutfitsChanged(weeklyOutfits);
+    const failedDayKeys = weeklyOutfits.filter((outfit) => outfit.isError).map((outfit) => outfit.dayKey);
+    if (failedDayKeys.length > 0) {
+      for (const dayKey of failedDayKeys) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        await generateSingleDayOutfit(dayKey, { silent: true });
+      }
+    }
 
     if (plannerStatus) {
       plannerStatus.textContent = hasErrors
@@ -1024,10 +1148,15 @@ async function generateWeeklyOutfitsReliable() {
 }
 
 generateBtn?.addEventListener("click", () => {
+  activeSavedWeekId = null;
+  latestGeneratedOutfits = [];
+  if (saveWeekButton) saveWeekButton.disabled = true;
+  if (outfitsSavedIndicator) outfitsSavedIndicator.textContent = "";
   generateWeeklyOutfitsReliable();
 });
 
 retryGenerationBtn?.addEventListener("click", () => {
+  activeSavedWeekId = null;
   generateWeeklyOutfitsReliable();
 });
 
@@ -1172,9 +1301,7 @@ function renderOutfits(outfits, styleName, title = null) {
         pieceName.textContent = piece.name || "Vêtement";
         const pieceCategory = document.createElement("p");
         pieceCategory.className = "piece-category";
-        pieceCategory.textContent = [piece.category, piece.colors]
-          .filter(Boolean)
-          .join(" · ");
+        pieceCategory.textContent = getOutfitPieceLabel(piece);
         pieceInfo.append(pieceName, pieceCategory);
         pieceDiv.append(thumbnail, pieceInfo);
         piecesContainer.appendChild(pieceDiv);
@@ -1246,8 +1373,8 @@ function renderOutfits(outfits, styleName, title = null) {
         ];
         const updatedOutfits = [...outfits];
         updatedOutfits[index] = replacement;
+        markWeeklyOutfitsChanged(updatedOutfits);
         renderOutfits(updatedOutfits, styleName, outfitsTitle?.textContent);
-        void saveWeeklyOutfits(updatedOutfits);
         showToast(`Nouvelle tenue générée pour ${outfit.name} !`);
       });
       card.appendChild(editButton);
@@ -1303,6 +1430,29 @@ function renderOutfits(outfits, styleName, title = null) {
       }
 
       if (isError && outfit.dayKey) {
+        const alternativeStyles = ALTERNATIVE_STYLES.filter((styleKey) => styleKey !== outfit.style);
+        if (alternativeStyles.length > 0) {
+          const alternativeBanner = document.createElement("section");
+          alternativeBanner.className = "outfit-alternative-banner";
+          alternativeBanner.setAttribute("aria-label", "Styles alternatifs disponibles");
+          const alternativeMessage = document.createElement("p");
+          alternativeMessage.textContent = "Il manque des vêtements compatibles avec ce style. Essaie plutôt :";
+          const alternativeActions = document.createElement("div");
+          alternativeActions.className = "outfit-alternative-actions";
+          for (const styleKey of alternativeStyles) {
+            const alternativeButton = document.createElement("button");
+            alternativeButton.type = "button";
+            alternativeButton.className = "outfit-alternative-btn";
+            alternativeButton.textContent = getStyleLabel(styleKey);
+            alternativeButton.addEventListener("click", () => {
+              void generateDayWithAlternativeStyle(outfit.dayKey, styleKey);
+            });
+            alternativeActions.appendChild(alternativeButton);
+          }
+          alternativeBanner.append(alternativeMessage, alternativeActions);
+          card.appendChild(alternativeBanner);
+        }
+
         const retryCardBtn = document.createElement("button");
         retryCardBtn.type = "button";
         retryCardBtn.className = "btn btn-secondary retry-card-btn";

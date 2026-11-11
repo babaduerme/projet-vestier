@@ -9,10 +9,10 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
 | --- | --- | --- |
 | Interface web avec plusieurs écrans et navigation cohérente | Conforme | `index.html`, `login.html`, `wardrobe.html`, `outfits.html`, `trip.html`, `404.html`, `auth.js`. |
 | Serveur applicatif exposant une API, logique métier côté serveur | Conforme | `server.js` expose `/api/health`, `/api/outfits/validate`, `/api/outfits/check-wardrobe`, `/api/outfits/chic`, `/api/outfits/validate-response`. Il importe les règles métier de `outfit-matcher.js`. |
-| Base de données et données persistantes | Conforme | Firestore : `users/{uid}/clothes`, `outfits/currentWeek`, `settings/weeklyStyles`. |
+| Base de données et données persistantes | Conforme | Firestore : `users/{uid}/clothes`, `outfits/{weekId}`, `settings/weeklyStyles` ; l'ancien `outfits/currentWeek` reste compatible. |
 | CRUD complet sur au moins une entité | Conforme | Garde-robe : création, lecture, modification (bouton « Modifier » + `updateDoc`), suppression. |
 | Mode valise et sauvegarde des voyages | Conforme | `trip.html`, `trip.js`, `trip-planner.js`, collection `users/{uid}/trips`, règles Firestore dédiées. |
-| Validation des entrées côté serveur | Conforme | `server.js` valide types, longueurs, styles, météo. `firestore.rules` valide les vêtements avant écriture. |
+| Validation des entrées côté serveur | Partiel | `server.js` valide types, longueurs, styles et météo ; Firestore valide les vêtements, le schéma des tenues/réglages et les champs, dates et listes des voyages. Les règles ne rejouent pas la validation métier de chaque tenue enregistrée. |
 | Dépôt Git avec historique lisible | Conforme | Plusieurs commits de construction : cadrage documentaire, règles de tenues, API/CRUD, nettoyage du dépôt, conformité. |
 | README d'installation | Conforme | `README.md` : prérequis, `npm install`, `npm start`, tests, API, structure. |
 
@@ -21,9 +21,9 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
 | Critère | Statut | Détail |
 | --- | --- | --- |
 | Aucun bouton mort, lien sans destination, écran vide sans explication | Partiel | Les états vides de garde-robe et de planning sont traités. La modale de confirmation de suppression existe mais `deleteCloth` utilise encore `confirm()` : doublon d'interface à nettoyer. |
-| Aucun TODO, code commenté, fonctionnalité à moitié branchée | Partiel | Le squelette `functions/` et les helpers non appelés ont été retirés. Reste la modale de suppression non branchée. |
+| Aucun TODO, code commenté, fonctionnalité à moitié branchée | Partiel | Aucun TODO/FIXME actif repéré ; la modale de confirmation de suppression reste inutilisée (`deleteCloth` utilise `confirm()`). |
 | Chaque opération va jusqu'au bout | Conforme | CRUD garde-robe, génération, sauvegarde de semaine. |
-| Cas d'erreur traités et affichés | Partiel | Erreurs Firebase, Cloudinary, API et tenues impossibles affichées. Tous les chemins réseau ne sont pas couverts par un test navigateur. |
+| Cas d'erreur traités et affichés | Partiel | Erreurs Firebase, Cloudinary, API et tenues impossibles affichées. Les journées en échec sont relancées une fois et proposent Casual, Rock ou Streetwear ; si une pièce obligatoire manque réellement, voir M8 dans `docs/CODE_REVIEW.md`. Tous les chemins réseau ne sont pas couverts par un test navigateur. |
 | État vide soigné | Conforme | Messages et boutons d'ajout dans `wardrobe.html` / `outfits.html`. |
 | Un inconnu installe et lance via le README | Conforme | `npm install` + `npm start` ; test serveur automatisé. La connexion Firebase réelle reste à vérifier sur un poste vierge. |
 | Utilisable dix minutes sans casser | Partiel | Parcours principal stable et testé unitairement ; parcours navigateur complet non exécuté dans cet environnement. |
@@ -56,9 +56,9 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
 | Validation serveur et échappement | Conforme | API + règles Firestore ; `escapeHtml` et `textContent` majoritaires. |
 | Aucun secret dans le dépôt | Conforme | `firebase-debug.log` retiré du suivi et ignoré ; clé Web Firebase et preset Cloudinary publics par nature. |
 | Erreurs jusqu'à l'utilisateur | Partiel | Toasts et cartes d'erreur ; certains `catch` silencieux restent à instrumenter. |
-| Droits vérifiés côté serveur | Conforme | `firestore.rules` : `request.auth.uid == userId`. |
+| Droits vérifiés côté serveur | Conforme | Les règles Firestore réservent lecture et écriture à `request.auth.uid == userId`. |
 | Le code fait ce que la spec demande | Partiel | Le CRUD passe par Firestore, pas par l'API HTTP. C'est documenté et assumé ; l'API porte la logique de tenue. |
-| Code mort / dupliqué | Partiel | `functions/index.js` squelette, helpers non utilisés, doublon de bouton supprimé. |
+| Code mort / dupliqué | Partiel | La modale de suppression et quelques helpers restent à nettoyer ; le doublon de bouton a été supprimé. |
 | Capacité à expliquer chaque fichier | Conforme | `README.md`, `AGENTS.md`, `docs/CODE_REVIEW.md`. |
 
 ## 6. Sécurité et données personnelles
@@ -75,10 +75,24 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
    client et les règles Firestore. Si l'enseignant exige que tout le CRUD passe
    par le serveur, il faudra ajouter des routes `/api/clothes` et un backend
    Firebase Admin ou REST.
-2. **Pas de Cloud Functions déployées.** `functions/index.js` est un squelette.
-3. **Photo manuscrite absente.** À ajouter avant le rendu.
-4. **Parcours navigateur non exécuté dans cet environnement.** Les tests
+2. **Photo manuscrite absente.** À ajouter avant le rendu.
+3. **Parcours navigateur non exécuté dans cet environnement.** Les tests
    automatisés couvrent les règles et l'API ; la connexion Firebase réelle, le
    upload Cloudinary et l'analyse d'image restent à valider manuellement.
-5. **Historique Git.** À compléter par des commits lisibles ; un commit unique
-   n'est pas acceptable pour le critère « historique lisible ».
+4. **Émulateur Firestore indisponible.** La compilation des règles n'a pas pu
+   démarrer car Java n'est pas installé ou accessible dans cet environnement.
+5. **Modifications non commitées.** Plusieurs fichiers restent modifiés dans
+   l'espace de travail ; il faudra les committer avant le dépôt final.
+6. **Validation métier Firestore.** Les règles contrôlent les schémas, tailles,
+   styles et dates, mais ne rejouent pas les règles de composition d'une tenue.
+   Le validateur métier et l'API restent nécessaires avant sauvegarde/affichage.
+
+## 8. Vérification actualisée
+
+- `npm test` : 100 tests réussis, 0 échec (vérifié le 11 novembre 2026).
+- Le nom de ville météo mémorisé est affiché avec `textContent`, pas interprété
+  comme du HTML.
+- Le parcours Firebase/Cloudinary dans un navigateur connecté et l'installation
+  sur une machine vierge restent à vérifier manuellement.
+- Les modifications présentes dans l'espace de travail doivent être commités
+  avant le dépôt final.

@@ -99,15 +99,12 @@ explicite.
 .
 ├── public/                 Application statique
 │   ├── js/
-│   │   ├── outfit-matcher.js   Règles métier et validateur déterministe
-│   │   ├── outfits.js          Planning et génération de tenues
-│   │   ├── outfit-generator.js Génération pure partagée (semaine + valise)
-│   │   ├── trip-planner.js     Sélection minimale de la valise
-│   │   ├── trip.js             Page mode valise et Firestore trips
-│   │   ├── wardrobe.js         CRUD de la garde-robe
-│   │   ├── api-client.js       Appel de l'API de validation
-│   │   ├── config.js           Configuration Firebase et Cloudinary
-│   │   └── ...
+│   │   ├── core/               Configuration, API client, thème et UI
+│   │   ├── auth/               Authentification et connexion
+│   │   ├── wardrobe/           Garde-robe, classification et couleurs
+│   │   ├── outfits/             Planning et entrée de la page tenues
+│   │   ├── trip/                Page valise et planificateur de séjour
+│   │   └── shared/              Météo, génération, validation et styles partagés
 │   ├── css/
 │   └── *.html
 ├── server.js               Serveur HTTP + API (Node natif)
@@ -124,7 +121,9 @@ explicite.
 Les données sont stockées sous :
 
 - `users/{uid}/clothes/{clothId}` : vêtements.
-- `users/{uid}/outfits/currentWeek` : tenues de la semaine.
+- `users/{uid}/outfits/{weekId}` : sauvegardes hebdomadaires (réouverture,
+  modification et suppression). L'ancien document `currentWeek` reste pris en
+  charge pour les données déjà enregistrées.
 - `users/{uid}/settings/weeklyStyles` : styles choisis par jour.
 - `users/{uid}/trips/{tripId}` : valises sauvegardées (destination, dates,
   styles, pièces, cases cochées, météo).
@@ -151,7 +150,8 @@ firebase deploy --only firestore:rules
 - Le CRUD de la garde-robe passe directement par le SDK Firebase client ; les
   règles Firestore valident les écritures côté serveur, mais il n'existe pas
   encore d'API CRUD HTTP dédiée.
-- Les Cloud Functions de `functions/` sont un squelette et ne sont pas déployées.
+- Aucune Cloud Function n'est nécessaire ou déployée ; l'API locale est portée
+  par `server.js`.
 - La photo de la spécification manuscrite de la séance 1 est manquante
   (`docs/specification-manuscrite.jpg`).
 - Le déploiement en ligne n'est pas requis par le cahier des charges ; le projet

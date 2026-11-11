@@ -5,7 +5,7 @@ import { initAuth } from "../auth/auth.js";
 import { showToast } from "../core/ui-utils.js";
 import { GARMENT_TYPES, migrateGarment } from "../shared/outfit-matcher.js";
 import { fetchWeatherForDateRange, geocodeCity } from "../shared/weather/weather.js";
-import { CABIN_MAX_PIECES, planTrip } from "./trip-planner.js";
+import { planTrip } from "./trip-planner.js";
 import { getStyleLabel } from "../shared/styles/style-utils.js";
 import {
   addDoc,
@@ -22,6 +22,8 @@ import {
 const MAX_TRIP_DAYS = 21;
 const CATEGORY_LABELS = {
   haut: "Hauts",
+  "premiere-couche": "Premières couches · t-shirts, polos et chemises",
+  "seconde-couche": "Secondes couches · pulls et hoodies",
   bas: "Bas",
   robe: "Robes",
   manteau: "Manteaux et vestes",
@@ -32,6 +34,8 @@ const CATEGORY_LABELS = {
 };
 const CATEGORY_EMOJIS = {
   haut: "👕",
+  "premiere-couche": "👕",
+  "seconde-couche": "🧥",
   bas: "👖",
   robe: "👗",
   manteau: "🧥",
@@ -45,7 +49,7 @@ const tripForm = document.getElementById("trip-form");
 const destinationInput = document.getElementById("trip-destination");
 const startInput = document.getElementById("trip-start");
 const endInput = document.getElementById("trip-end");
-const maxPiecesInput = document.getElementById("trip-max-pieces");
+const laundryInput = document.getElementById("trip-laundry");
 const statusEl = document.getElementById("trip-status");
 const generateBtn = document.getElementById("trip-generate-btn");
 const resultsEl = document.getElementById("trip-results");
@@ -110,20 +114,6 @@ function getSelectedStyles() {
   );
 }
 
-function getCapacity() {
-  const selected = document.querySelector('input[name="trip-capacity"]:checked');
-  if (selected?.value === "custom") {
-    const max = Number(maxPiecesInput?.value);
-    return { cabin: false, maxPieces: Number.isFinite(max) ? max : null };
-  }
-  return { cabin: true, maxPieces: CABIN_MAX_PIECES };
-}
-
-function updateCapacityState() {
-  const selected = document.querySelector('input[name="trip-capacity"]:checked');
-  if (maxPiecesInput) maxPiecesInput.disabled = selected?.value !== "custom";
-}
-
 function getDateRange(startDate, endDate) {
   const start = new Date(`${startDate}T12:00:00`);
   const end = new Date(`${endDate}T12:00:00`);
@@ -156,11 +146,22 @@ function getWeatherSummary(days) {
 
 function updatePackedCount() {
   if (!currentPlan || !pieceCountEl) return;
-  const pieces = currentPlan.pieces || [];
+  const pieces = (currentPlan.pieces || []).filter(isPackablePiece);
   const checked = pieces.filter((piece) =>
     checkedPieceIds.has(String(piece.id)),
   ).length;
-  pieceCountEl.textContent = `${currentPlan.totalPieces || pieces.length} pièces · ${checked} déjà cochée${checked > 1 ? "s" : ""}`;
+  pieceCountEl.textContent = `${pieces.length} pièces · ${checked} déjà cochée${checked > 1 ? "s" : ""}`;
+}
+
+function isPackablePiece(piece) {
+  return piece?.category !== "autre" && piece?.type !== GARMENT_TYPES.AUTRE && piece?.type !== GARMENT_TYPES.SAC;
+}
+
+function getPackingCategory(piece) {
+  if (piece?.packingCategory) return piece.packingCategory;
+  if ([GARMENT_TYPES.TSHIRT, GARMENT_TYPES.POLO, GARMENT_TYPES.CHEMISE, GARMENT_TYPES.DEBARDEUR].includes(piece?.type)) return "premiere-couche";
+  if ([GARMENT_TYPES.PULL, GARMENT_TYPES.HOODIE].includes(piece?.type)) return "seconde-couche";
+  return piece?.category || "autre";
 }
 
 function appendSummaryItem(label, value) {
@@ -187,7 +188,7 @@ function renderSummary(plan) {
   );
   appendSummaryItem(
     "Pièces",
-    `${plan.totalPieces || 0}${plan.maxPieces ? ` / ${plan.maxPieces}` : ""}`,
+    `${plan.totalPieces || 0} pièces sélectionnées`,
   );
   appendSummaryItem("Combinaisons", `${plan.combinations || 0} tenues possibles`);
   appendSummaryItem("Météo", getWeatherSummary(plan.days));
@@ -198,8 +199,9 @@ function renderSuitcase(plan) {
   suitcaseEl.replaceChildren();
 
   const grouped = new Map();
-  for (const piece of plan.pieces || []) {
-    const category = CATEGORY_LABELS[piece.category] ? piece.category : "autre";
+  for (const piece of (plan.pieces || []).filter(isPackablePiece)) {
+    const categoryKey = getPackingCategory(piece);
+    const category = CATEGORY_LABELS[categoryKey] ? categoryKey : "autre";
     if (!grouped.has(category)) grouped.set(category, []);
     grouped.get(category).push(piece);
   }
@@ -378,7 +380,7 @@ async function generateTripPlan(event) {
   const startDate = startInput?.value || "";
   const endDate = endInput?.value || "";
   const styles = getSelectedStyles();
-  const { cabin, maxPieces } = getCapacity();
+  const laundryAvailable = Boolean(laundryInput?.checked);
   const dateRange = getDateRange(startDate, endDate);
 
   if (!destination) {
@@ -392,11 +394,6 @@ async function generateTripPlan(event) {
   }
   if (styles.length === 0) {
     setStatus("Choisis au moins un style.", true);
-    return;
-  }
-  if (!cabin && (!Number.isInteger(maxPieces) || maxPieces < 1 || maxPieces > 30)) {
-    setStatus("Le nombre maximum de pièces doit être compris entre 1 et 30.", true);
-    maxPiecesInput?.focus();
     return;
   }
 
@@ -434,8 +431,7 @@ async function generateTripPlan(event) {
       wardrobe: clothes,
       days: tripDays,
       styles,
-      maxPieces,
-      cabin,
+      laundryAvailable,
     });
     plan.destination = location.name || destination;
     plan.startDate = startDate;
@@ -447,8 +443,15 @@ async function generateTripPlan(event) {
       .map((day) => day.date);
     plan.weatherError = weatherError;
 
-    checkedPieceIds = new Set();
-    currentTripId = null;
+    const existingTrip = savedTrips.find((trip) =>
+      String(trip.destination || "").trim().toLocaleLowerCase("fr") ===
+        String(plan.destination || destination).trim().toLocaleLowerCase("fr") &&
+      trip.startDate === startDate && trip.endDate === endDate,
+    );
+    currentTripId = existingTrip?.id || null;
+    const availableIds = new Set((plan.pieceIds || []).map(String));
+    checkedPieceIds = new Set((existingTrip?.checkedPieceIds || []).map(String)
+      .filter((id) => availableIds.has(id)));
     renderPlan(plan);
     if (plan.success) {
       setStatus(
@@ -474,8 +477,7 @@ function buildTripData() {
     startDate: currentPlan.startDate || startInput?.value || "",
     endDate: currentPlan.endDate || endInput?.value || "",
     styles: currentPlan.styles || getSelectedStyles(),
-    maxPieces: currentPlan.maxPieces ?? null,
-    cabin: Boolean(currentPlan.cabin),
+    laundryAvailable: Boolean(laundryInput?.checked),
     pieceIds: currentPlan.pieceIds || [],
     checkedPieceIds: [...checkedPieceIds],
     weatherSnapshot: (currentPlan.days || []).map((day) => ({
@@ -496,8 +498,6 @@ function buildTripData() {
       })),
       totalPieces: currentPlan.totalPieces || 0,
       combinations: currentPlan.combinations || 0,
-      maxPieces: currentPlan.maxPieces ?? null,
-      cabin: Boolean(currentPlan.cabin),
       pieceIds: currentPlan.pieceIds || [],
     },
   };
@@ -542,14 +542,7 @@ function setFormFromTrip(trip) {
   document.querySelectorAll('input[name="trip-style"]').forEach((input) => {
     input.checked = styles.has(input.value);
   });
-  const cabin = Boolean(trip.cabin);
-  document.querySelectorAll('input[name="trip-capacity"]').forEach((input) => {
-    input.checked = input.value === (cabin ? "cabin" : "custom");
-  });
-  if (maxPiecesInput) {
-    maxPiecesInput.value = String(trip.maxPieces || 8);
-  }
-  updateCapacityState();
+  if (laundryInput) laundryInput.checked = Boolean(trip.laundryAvailable);
   restoringForm = false;
 }
 
@@ -560,9 +553,14 @@ function openSavedTrip(trip) {
   }
   setFormFromTrip(trip);
   currentTripId = trip.id;
-  checkedPieceIds = new Set((trip.checkedPieceIds || []).map(String));
+  const savedPieces = (trip.plan.pieces || []).filter(isPackablePiece);
+  const savedPieceIds = new Set(savedPieces.map((piece) => String(piece.id)));
+  checkedPieceIds = new Set((trip.checkedPieceIds || []).map(String).filter((id) => savedPieceIds.has(id)));
   currentPlan = {
     ...trip.plan,
+    pieces: savedPieces,
+    pieceIds: (trip.pieceIds || trip.plan.pieceIds || []).map(String).filter((id) => savedPieceIds.has(id)),
+    totalPieces: savedPieces.length,
     success: true,
     missing: [],
     message: null,
@@ -570,11 +568,8 @@ function openSavedTrip(trip) {
     startDate: trip.startDate,
     endDate: trip.endDate,
     styles: trip.styles || [],
-    totalPieces: trip.plan.totalPieces ?? trip.pieceIds?.length ?? 0,
+    totalPieces: savedPieces.length,
     combinations: trip.plan.combinations ?? 0,
-    maxPieces: trip.maxPieces ?? null,
-    cabin: Boolean(trip.cabin),
-    pieceIds: trip.pieceIds || trip.plan.pieceIds || [],
     weatherMissingDates: (trip.plan.days || [])
       .filter((day) => !day.weather)
       .map((day) => day.date),
@@ -702,12 +697,6 @@ suitcaseEl?.addEventListener("change", (event) => {
 tripForm?.addEventListener("submit", generateTripPlan);
 tripForm?.addEventListener("input", markFormDirty);
 tripForm?.addEventListener("change", markFormDirty);
-document.querySelectorAll('input[name="trip-capacity"]').forEach((input) => {
-  input.addEventListener("change", () => {
-    updateCapacityState();
-    markFormDirty();
-  });
-});
 saveBtn?.addEventListener("click", () => {
   void saveTrip();
 });
@@ -715,7 +704,6 @@ saveBtn?.addEventListener("click", () => {
 const todayIso = toIsoDate(new Date());
 if (startInput) startInput.min = todayIso;
 if (endInput) endInput.min = todayIso;
-updateCapacityState();
 
 initAuth((user) => {
   currentUser = user;

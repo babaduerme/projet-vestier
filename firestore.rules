@@ -33,22 +33,86 @@ service cloud.firestore {
         && data.destination.size() > 0
         && data.destination.size() <= 200
         && data.startDate is string
-        && data.startDate.size() == 10
+        && data.startDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && data.endDate is string
-        && data.endDate.size() == 10
+        && data.endDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.startDate <= data.endDate
         && data.styles is list
         && data.styles.size() > 0
         && data.styles.size() <= 5
         && data.styles.hasOnly(['casual', 'chic', 'minimaliste', 'rock', 'streetwear'])
         && data.pieceIds is list
-        && data.pieceIds.size() <= 30
+        && data.pieceIds.size() <= 100
         && data.checkedPieceIds is list
-        && data.checkedPieceIds.size() <= 30
+        && data.checkedPieceIds.size() <= 100
         && data.weatherSnapshot is list
+        && data.weatherSnapshot.size() > 0
         && data.weatherSnapshot.size() <= 21
         && data.plan is map
+        && data.plan.keys().hasOnly(['pieces', 'days', 'totalPieces', 'combinations', 'pieceIds', 'maxPieces', 'cabin'])
+        && data.plan.pieces is list
+        && data.plan.pieces.size() <= 100
+        && data.plan.days is list
+        && data.plan.days.size() > 0
+        && data.plan.days.size() <= 21
+        && data.plan.totalPieces is number
+        && data.plan.totalPieces >= 0
+        && data.plan.totalPieces <= 100
+        && data.plan.combinations is number
+        && data.plan.combinations >= 0
+        && data.plan.pieceIds is list
+        && data.plan.pieceIds.size() <= 100
+        && (!('laundryAvailable' in data) || data.laundryAvailable is bool)
+        && data.keys().hasOnly(['destination', 'startDate', 'endDate', 'styles', 'laundryAvailable', 'pieceIds', 'checkedPieceIds', 'weatherSnapshot', 'plan', 'createdAt', 'updatedAt', 'maxPieces', 'cabin'])
         && (!('maxPieces' in data) || data.maxPieces == null || (data.maxPieces is number && data.maxPieces >= 1 && data.maxPieces <= 30))
         && (!('cabin' in data) || data.cabin is bool);
+    }
+
+    function isValidOutfitEntry(outfit) {
+      return outfit is map
+        && outfit.keys().hasOnly(['id', 'dayKey', 'name', 'style', 'styleBadge', 'pieces', 'missingSlots', 'description', 'manque', 'weather', 'weatherSummary', 'isError', 'isSkipped'])
+        && (!('id' in outfit) || (outfit.id is string && outfit.id.size() <= 100))
+        && (!('dayKey' in outfit) || outfit.dayKey in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+        && (!('name' in outfit) || (outfit.name is string && outfit.name.size() <= 80))
+        && (!('style' in outfit) || outfit.style in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear'])
+        && (!('styleBadge' in outfit) || (outfit.styleBadge is string && outfit.styleBadge.size() <= 40))
+        && outfit.pieces is list
+        && outfit.pieces.size() <= 20
+        && (!('missingSlots' in outfit) || (outfit.missingSlots is list && outfit.missingSlots.size() <= 10))
+        && (!('description' in outfit) || (outfit.description is string && outfit.description.size() <= 500))
+        && (!('manque' in outfit) || outfit.manque == null || (outfit.manque is string && outfit.manque.size() <= 200))
+        && (!('weather' in outfit) || outfit.weather == null || outfit.weather is map)
+        && (!('weatherSummary' in outfit) || (outfit.weatherSummary is string && outfit.weatherSummary.size() <= 200))
+        && (!('isError' in outfit) || outfit.isError is bool)
+        && (!('isSkipped' in outfit) || outfit.isSkipped is bool);
+    }
+
+    function isValidOutfits(data) {
+      return data is map
+        && data.keys().hasOnly(['outfits', 'updatedAt'])
+        && data.outfits is list
+        && data.outfits.size() <= 7
+        && (!('updatedAt' in data) || data.updatedAt is string || data.updatedAt is timestamp)
+        && (data.outfits.size() < 1 || isValidOutfitEntry(data.outfits[0]))
+        && (data.outfits.size() < 2 || isValidOutfitEntry(data.outfits[1]))
+        && (data.outfits.size() < 3 || isValidOutfitEntry(data.outfits[2]))
+        && (data.outfits.size() < 4 || isValidOutfitEntry(data.outfits[3]))
+        && (data.outfits.size() < 5 || isValidOutfitEntry(data.outfits[4]))
+        && (data.outfits.size() < 6 || isValidOutfitEntry(data.outfits[5]))
+        && (data.outfits.size() < 7 || isValidOutfitEntry(data.outfits[6]));
+    }
+
+    function isValidWeeklyStyles(data) {
+      return data is map
+        && data.keys().hasOnly(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+        && data.keys().hasAll(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+        && data.monday in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear']
+        && data.tuesday in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear']
+        && data.wednesday in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear']
+        && data.thursday in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear']
+        && data.friday in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear']
+        && data.saturday in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear']
+        && data.sunday in ['', 'casual', 'chic', 'minimaliste', 'rock', 'streetwear'];
     }
 
     match /users/{userId} {
@@ -61,7 +125,9 @@ service cloud.firestore {
       }
 
       match /outfits/{outfitId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidOutfits(request.resource.data);
+        allow delete: if isOwner(userId);
       }
 
       match /trips/{tripId} {
@@ -71,7 +137,10 @@ service cloud.firestore {
       }
 
       match /settings/{settingId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && (settingId == 'weeklyStyles' && isValidWeeklyStyles(request.resource.data));
+        allow delete: if isOwner(userId);
       }
 
       // Tout le reste est refusé par défaut.

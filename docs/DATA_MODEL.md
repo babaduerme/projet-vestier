@@ -8,7 +8,7 @@ sous-arbre isolé :
 ```text
 users/{uid}
 ├── clothes/{clothId}
-├── outfits/currentWeek
+├── outfits/{weekId}
 ├── settings/weeklyStyles
 └── trips/{tripId}
 ```
@@ -54,13 +54,16 @@ collection `users/{uid}/clothes` avec `limit`, puis pagination par curseur sur
 `createdAt` implicite du snapshot. Pour un volume important, ajouter un index
 `createdAt DESC`.
 
-## 3. Entité `outfits/currentWeek` (tenues de la semaine)
+## 3. Entité `outfits/{weekId}` (semaine sauvegardée)
 
-Chemin : `users/{uid}/outfits/currentWeek`
+Chemin : `users/{uid}/outfits/{weekId}`. Chaque sauvegarde créée par l'utilisateur
+est conservée indépendamment pour pouvoir la rouvrir ou la supprimer. L'ancien
+document fixe `outfits/currentWeek` reste lisible et modifiable pour compatibilité.
 
 | Champ | Type | Contrainte |
 | --- | --- | --- |
 | `outfits` | array | 0 à 7 éléments. |
+| `updatedAt` | string | timestamp | Date de création ou de dernière modification de la sauvegarde. |
 | `outfits[].id` | string | Identifiant d'affichage. |
 | `outfits[].dayKey` | string | `monday` … `sunday`. |
 | `outfits[].name` | string | Libellé du jour. |
@@ -81,6 +84,8 @@ Chemin : `users/{uid}/outfits/currentWeek`
 - Chic et Minimaliste ne contiennent ni `t-shirt` ni `hoodie`.
 - Les pièces sont stockées en snapshot : si un vêtement est supprimé, la tenue
   sauvegardée reste lisible mais peut être revalidée à l'affichage.
+- `firestore.rules` vérifie le format des entrées, les jours, les styles, les
+  champs autorisés et les tailles maximales avant la sauvegarde.
 
 ## 4. Entité `settings/weeklyStyles`
 
@@ -102,12 +107,11 @@ Chemin : `users/{uid}/trips/{tripId}`
 | `destination` | string | 1 à 200 caractères. |
 | `startDate` / `endDate` | string | Dates `YYYY-MM-DD`, séjour de 21 jours maximum. |
 | `styles` | array | 1 à 5 styles du catalogue. |
-| `maxPieces` | number \| null | 1 à 30, ou null si non limité. |
-| `cabin` | boolean | Valise cabine (10 pièces). |
-| `pieceIds` | array | IDs des pièces sélectionnées, 30 maximum. |
-| `checkedPieceIds` | array | IDs cochés « déjà dans la valise ». |
+| `laundryAvailable` | boolean | Indique si une lessive est possible pendant le séjour. |
+| `pieceIds` | array | IDs des pièces sélectionnées, 100 maximum. |
+| `checkedPieceIds` | array | IDs cochés « déjà dans la valise », 100 maximum. |
 | `weatherSnapshot` | array | `{ date, weather }` par jour. |
-| `plan` | map | Pièces, tenues jour par jour, compteurs et capacité. |
+| `plan` | map | Pièces sélectionnées, tenues jour par jour et compteurs. |
 | `createdAt` / `updatedAt` | timestamp | `serverTimestamp()`. |
 
 ### Contraintes métier
@@ -115,6 +119,8 @@ Chemin : `users/{uid}/trips/{tripId}`
 - Le plan est un snapshot : rouvrir une valise ne dépend pas d'une régénération.
 - Les IDs de pièces et les cases cochées sont séparés pour que l'état de
   préparation de la valise soit persisté.
+- Les anciennes propriétés `maxPieces` et `cabin` sont ignorées à l'ouverture ;
+  les nouveaux plans ne dépendent d'aucune capacité de stockage.
 - Les règles Firestore valident les champs racine et la taille des listes.
 
 ## 6. Relations
@@ -138,11 +144,17 @@ Tenue 1 ─── N Pièces (snapshot)
 - `read`, `create`, `update`, `delete` sur `clothes` : propriétaire uniquement.
 - `create`/`update` : `isValidCloth(request.resource.data)` vérifie les types,
   longueurs et domaines.
-- `outfits` et `settings` : propriétaire uniquement.
+- `outfits` : propriétaire uniquement ; schéma et taille des listes vérifiés.
+- `settings/weeklyStyles` : propriétaire uniquement ; les sept jours et les
+  styles autorisés sont vérifiés.
+- `trips` : propriétaire uniquement ; dates ISO ordonnées, styles, lessive,
+  plan et tailles des listes sont vérifiés.
 - Tout autre chemin : refusé.
 
 La validation côté client reste présente pour l'expérience utilisateur, mais
-elle n'est pas la seule barrière : Firestore refuse une écriture non conforme.
+elle n'est pas la seule barrière : Firestore refuse une écriture dont le schéma
+est invalide. La validation des règles métier de composition reste faite par
+`outfit-matcher.js` et l'API ; les règles Firestore ne rejouent pas ce validateur.
 
 ## 8. Volumétrie et évolution
 

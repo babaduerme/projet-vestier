@@ -288,11 +288,27 @@ export async function loadWeatherForecast(location = getSavedWeatherLocation()) 
 
       const locationBadge = document.createElement("span");
       locationBadge.className = "weather-summary-location";
-      locationBadge.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" style="vertical-align: -2px; margin-right: 4px;"><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 11.4 7.3 11.7.4.3 1 .3 1.4 0 .3-.3 7.3-6.3 7.3-11.7a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg>${weatherLocation}`;
+      const locationIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      locationIcon.setAttribute("viewBox", "0 0 24 24");
+      locationIcon.setAttribute("width", "16");
+      locationIcon.setAttribute("height", "16");
+      locationIcon.setAttribute("fill", "currentColor");
+      locationIcon.setAttribute("aria-hidden", "true");
+      locationIcon.style.cssText = "vertical-align: -2px; margin-right: 4px;";
+      const locationPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      locationPath.setAttribute("d", "M12 2a8 8 0 0 0-8 8c0 5.4 7 11.4 7.3 11.7.4.3 1 .3 1.4 0 .3-.3 7.3-6.3 7.3-11.7a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z");
+      locationIcon.appendChild(locationPath);
+      const locationName = document.createElement("span");
+      locationName.textContent = weatherLocation;
+      locationBadge.append(locationIcon, locationName);
 
       const todayInfo = document.createElement("span");
       todayInfo.className = "weather-summary-today";
-      todayInfo.innerHTML = `<strong>Aujourd'hui :</strong> ${todayWeather.label} · ${todayWeather.min}° à ${todayWeather.max}°C · 💧 ${todayWeather.rain}% · 💨 ${todayWeather.wind} km/h`;
+      const todayLabel = document.createElement("strong");
+      todayLabel.textContent = "Aujourd'hui :";
+      const todayDetails = document.createElement("span");
+      todayDetails.textContent = ` ${todayWeather.label} · ${todayWeather.min}° à ${todayWeather.max}°C · 💧 ${todayWeather.rain}% · 💨 ${todayWeather.wind} km/h`;
+      todayInfo.append(todayLabel, todayDetails);
 
       const helperTag = document.createElement("span");
       helperTag.className = "weather-status-badge";

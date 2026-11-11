@@ -62,3 +62,17 @@ test("generateOutfits respecte les bases de Chic, Minimaliste et Streetwear", ()
     assert.ok(types.includes(GARMENT_TYPES.TSHIRT), "Streetwear doit utiliser un t-shirt");
   }
 });
+
+test("Streetwear privilégie les pièces qui donnent un vrai caractère urbain", () => {
+  const streetwearWardrobe = [
+    ...wardrobe,
+    { id: "graphic-tee", name: "T-shirt noir imprimé graphique", colors: "noir", pattern: "motif" },
+    { id: "oversized-hoodie", name: "Hoodie noir oversize", colors: "noir" },
+    { id: "cargo-pants", name: "Pantalon cargo kaki", colors: "kaki" },
+  ];
+  const [outfit] = generateOutfits(streetwearWardrobe, "streetwear", 1, 0, { min: 6, max: 11, rain: 3 });
+  const pieceIds = outfit.pieces.map((piece) => piece.id);
+  assert.ok(pieceIds.includes("graphic-tee"), "le t-shirt graphique doit être préféré au t-shirt beige basique");
+  assert.ok(pieceIds.includes("oversized-hoodie"), "le hoodie oversize doit être préféré au pull beige");
+  assert.ok(pieceIds.includes("cargo-pants"), "le pantalon cargo doit être préféré au pantalon classique");
+});

@@ -11,8 +11,8 @@ test("le formulaire valise est accessible et complet", () => {
   assert.match(html, /<label for="trip-end">/);
   assert.match(html, /<fieldset[^>]*trip-fieldset/);
   assert.match(html, /name="trip-style"/);
-  assert.match(html, /name="trip-capacity"/);
-  assert.match(html, /id="trip-max-pieces"/);
+  assert.doesNotMatch(html, /name="trip-capacity"|trip-max-pieces/);
+  assert.match(html, /id="trip-laundry"/);
   assert.match(html, /aria-live="polite"/);
   assert.match(html, /id="saved-trips-list"/);
   assert.match(html, /id="trip-save-btn"/);

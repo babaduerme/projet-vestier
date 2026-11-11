@@ -166,10 +166,14 @@ function scoreOutfitForStyle(outfit, styleName) {
   );
   const avg = compatibilitySum / pieces.length;
   const isRock = canonicalStyleKeyFromRules(styleName) === "rock";
+  const isStreetwear = canonicalStyleKeyFromRules(styleName) === "streetwear";
   const hasGraphicTop = pieces.some(styleMateIsGraphicTop);
   const hasRockAccessory = pieces.some(styleMateIsRockOrMetal);
   const rockBonus = isRock && hasGraphicTop && hasRockAccessory ? 1.5 : 0;
-  return avg + rockBonus;
+  const streetwearBonus = isStreetwear
+    ? pieces.reduce((sum, piece) => sum + scoreStyle(piece, styleName), 0) / pieces.length
+    : 0;
+  return avg + rockBonus + streetwearBonus;
 }
 
 function isWarmWeather(weather) {
@@ -272,7 +276,12 @@ function generateOutfits(
     if (!activePool.length) activePool = pool.length ? pool : fallbackPool;
     if (!activePool.length) return null;
     activePool.sort((a, b) => scoreStyle(b, styleKey) - scoreStyle(a, styleKey));
-    return activePool[(offsetSeed + step) % activePool.length] || activePool[0];
+    const preferredPool = styleKey === "streetwear"
+      ? activePool.filter(
+          (piece) => scoreStyle(piece, styleKey) >= scoreStyle(activePool[0], styleKey) - 1,
+        )
+      : activePool;
+    return preferredPool[(offsetSeed + step) % preferredPool.length] || preferredPool[0];
   };
 
   const isRockStyle = styleKey === "rock";

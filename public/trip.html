@@ -101,27 +101,12 @@
             </fieldset>
 
             <fieldset class="trip-field trip-fieldset">
-              <legend>Capacité de la valise</legend>
-              <label class="trip-capacity-option">
-                <input type="radio" name="trip-capacity" value="cabin" checked />
-                <span>Valise cabine — 10 pièces maximum</span>
+              <legend>Organisation du séjour</legend>
+              <label class="trip-laundry-option">
+                <input type="checkbox" id="trip-laundry" name="laundryAvailable" />
+                <span>Je pourrai faire une lessive pendant le séjour</span>
               </label>
-              <label class="trip-capacity-option">
-                <input type="radio" name="trip-capacity" value="custom" />
-                <span>Limiter à</span>
-                <input
-                  type="number"
-                  id="trip-max-pieces"
-                  name="maxPieces"
-                  min="1"
-                  max="30"
-                  value="8"
-                  inputmode="numeric"
-                  aria-label="Nombre maximum de pièces"
-                  disabled
-                />
-                <span>pièces</span>
-              </label>
+              <p class="trip-hint">Les styles choisis guident les tenues prévues chaque jour.</p>
             </fieldset>
 
             <p id="trip-status" class="trip-status" role="status" aria-live="polite"></p>

@@ -15,6 +15,17 @@ ce que j'ai corrigé, et pourquoi. Les échecs sont conservés.
 | 8 | Sécuriser Firestore | « La validation doit être côté serveur, pas seulement dans le navigateur. » | Correct | `firestore.rules` valide les champs des vêtements et isole chaque utilisateur. |
 | 9 | Nettoyer le dépôt | « Aucun secret, aucun log dans le dépôt. » | Correct | `firebase-debug.log` retiré du suivi Git et ajouté au `.gitignore`. |
 | 10 | Vérifier | « Ajoute des tests et vérifie. » | Correct | 92 tests passent, dont 8 tests d'API. Les cas navigateur non exécutés sont marqués « information manquante » dans `TESTS.md`. |
+| 11 | Revoir la conformité au cahier | « Vérifie l'application contre le cahier joint, puis corrige les écarts confirmés. » | Correct après vérification | Remplacement d'une insertion météo `innerHTML` par des nœuds texte, validation de schéma Firestore pour les tenues/réglages/voyages, et mise à jour des documents de conformité. Les parcours Firebase réel et photo manuscrite restent à fournir/vérifier. |
+| 12 | Rééquilibrer le mode valise | « Avec une machine, limite les bas et robes, évite les manteaux en double, puis vérifie un séjour de 15 jours. » | Correct après test de régression | Le complément automatique respectait mal le plafond pour 15 jours ; ajout de plafonds et de substitutions validées, puis couverture par un test dédié. |
+| 13 | Sauvegarder le planning hebdomadaire | « Je veux pouvoir sauvegarder la semaine. » | Correct après branchement explicite | Ajout d'une action visible pour enregistrer la semaine dans Firestore, avec confirmation de succès, erreur visible et possibilité de réessayer. |
+| 14 | Réessayer une journée Chic en échec | « Le bouton de réessai laisse une journée sans tenue. » | Diagnostic partiel, problème d'usage encore ouvert | Une première correction a aligné le libellé de la pièce manquante sur le résolveur. La capture suivante montre que la journée reste sans tenue faute de chaussures habillées. Le bouton relance une composition qui ne peut pas réussir tant que la garde-robe ou le style ne change pas ; ne pas contourner la règle Chic du fil rouge. |
+| 15 | Respecter les livrables du fil rouge | « Tiens à jour le journal de prompts et la revue critique, qui sont des livrables. » | À maintenir | Cette ligne et l'écart de réessai sont consignés dans le journal et la revue critique ; les conclusions doivent rester alignées sur le cahier des charges. |
+| 16 | Conserver plusieurs semaines | « Je veux pouvoir rouvrir ou supprimer une semaine même après en avoir régénéré une autre, comme pour les valises. » | Correct après évolution du stockage | Abandon du document unique comme destination des nouvelles sauvegardes : chaque semaine explicitement sauvegardée est conservée dans `outfits/{weekId}`. La liste expose Rouvrir/Supprimer ; les modifications d'une semaine rouverte mettent à jour son document. L'ancien `currentWeek` reste lisible. |
+| 17 | Sauvegarde hebdomadaire manuelle | « Générer une semaine ne doit pas l'enregistrer ; c'est à moi de cliquer pour la sauvegarder. » | Correct | Retrait des écritures automatiques après génération, réessai et changement de tenue. Le bouton explicite crée une nouvelle sauvegarde ou met à jour celle qui a été rouverte ; l'interface indique les changements non enregistrés. |
+| 18 | Réessai automatique des journées en échec | « Je veux que la tenue se génère sans cliquer sur “Réessayer cette journée”. » | Correct avec respect des contraintes | La génération complète relance une fois automatiquement chaque journée en échec, par le même chemin que le bouton. Les règles de style restent actives ; si une pièce obligatoire manque réellement, l'échec précis reste affiché. |
+| 19 | Proposer un style de remplacement | « Si des vêtements manquent, afficher un bandeau et proposer un autre style, sauf Chic et Minimaliste. » | Correct | Les cartes en échec proposent Casual, Rock et Streetwear (sauf le style déjà tenté). Le choix met à jour le planning du jour puis relance sa génération, sans modifier les règles métier des styles. |
+| 20 | Clarifier les couches dans une tenue | Capture d'une tenue Streetwear affichant le t-shirt et le pull tous deux comme « haut ». | Corrigé | L'affichage des vêtements utilise désormais leur slot normalisé : « Première couche » et « Seconde couche » sont distinguées même si leurs anciennes catégories stockées sont identiques. |
+| 21 | Rendre le style Streetwear reconnaissable | « La génération Streetwear ressemble à du Minimaliste. » | Corrigé quand les pièces adaptées existent | Le classement Streetwear favorise maintenant les t-shirts graphiques/oversize, hoodies, bas cargo/jogger, baskets et vestes urbaines. Un test rouge puis vert vérifie le choix de pièces marquées face aux basiques. |
 
 ## Échecs analysés
 
@@ -32,6 +43,12 @@ ce que j'ai corrigé, et pourquoi. Les échecs sont conservés.
 4. **`avoidIds` trop strict.** Il rendait la seule couche chaude indisponible le
    deuxième jour. Corrigé en traitant `avoidIds` comme une préférence, pas comme
    une indisponibilité.
+5. **Réessai d'une journée Chic avec chaussures manquantes.** Le premier correctif
+   a réaligné le texte de l'emplacement manquant, mais la capture suivante montre
+   que le réessai n'aboutit toujours pas. L'analyse du résolveur confirme qu'il
+   refuse correctement les chaussures non habillées en Chic ; le bouton répète
+   alors un échec sans aider à modifier le style ou la garde-robe. À résoudre côté
+   parcours utilisateur sans affaiblir les règles du cahier des charges.
 
 ## Cinq prompts réutilisables
 

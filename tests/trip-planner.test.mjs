@@ -31,7 +31,7 @@ test("planTrip minimise les pièces et réutilise les vêtements", () => {
   const result = planTrip({ wardrobe, days: coldDays, styles: ["casual"] });
   assert.equal(result.success, true);
   assert.ok(result.totalPieces > 0);
-  assert.ok(result.totalPieces <= CABIN_MAX_PIECES);
+  assert.equal("maxPieces" in result, false);
 
   const selected = new Set(result.pieceIds);
   for (const day of result.days) {
@@ -95,28 +95,66 @@ test("planTrip signale précisément l'absence de pull ou de chemise", () => {
   assert.match(noBaseResult.message, /polo|chemise/i);
 });
 
-test("planTrip respecte la limite de pièces", () => {
-  const result = planTrip({
-    wardrobe,
-    days: coldDays,
-    styles: ["casual"],
-    maxPieces: 3,
-  });
-  assert.equal(result.success, false);
-  assert.match(result.message, /au-dessus de la limite/i);
-  assert.ok(result.totalPieces > 3);
+test("planTrip ignore les anciennes options de capacité et distingue les couches", () => {
+  const result = planTrip({ wardrobe, days: coldDays, styles: ["casual"], maxPieces: 1, cabin: true });
+  assert.equal(result.success, true);
+  assert.equal("maxPieces" in result, false);
+  assert.ok(result.pieces.some((piece) => piece.packingCategory === "premiere-couche"));
+  assert.ok(result.pieces.some((piece) => piece.packingCategory === "seconde-couche"));
 });
 
-test("planTrip applique la capacité cabine", () => {
+test("planTrip exclut les sacs et les vêtements classés Autres", () => {
   const result = planTrip({
-    wardrobe,
+    wardrobe: [
+      ...wardrobe,
+      { id: "bag", name: "sac noir", category: "accessoires", type: GARMENT_TYPES.SAC, colors: "noir" },
+      { id: "other", name: "vêtement inconnu", category: "autre", type: GARMENT_TYPES.AUTRE, colors: "noir" },
+    ],
     days: coldDays,
     styles: ["casual"],
-    cabin: true,
   });
-  assert.equal(result.maxPieces, CABIN_MAX_PIECES);
-  assert.equal(result.cabin, true);
-  if (result.success) {
-    assert.ok(result.totalPieces <= CABIN_MAX_PIECES);
-  }
+  assert.equal(result.success, true);
+  assert.ok(!result.pieceIds.includes("bag"));
+  assert.ok(!result.pieceIds.includes("other"));
+});
+
+test("avec une machine, limite les bas et robes et ne prend qu'un manteau", () => {
+  const variedWardrobe = [
+    ...wardrobe,
+    { id: "dress1", name: "robe noire", category: "robe", colors: "noir" },
+    { id: "dress2", name: "robe bleue", category: "robe", colors: "bleu" },
+    { id: "coat2", name: "manteau beige", category: "manteau", colors: "beige" },
+  ];
+  const days = Array.from({ length: 15 }, (_, index) => ({
+    date: `2026-11-${String(index + 16).padStart(2, "0")}`,
+    weather: { min: 5, max: 12, rain: 10 },
+  }));
+  const result = planTrip({ wardrobe: variedWardrobe, days, styles: ["casual"], laundryAvailable: true });
+  assert.equal(result.success, true);
+  assert.ok(result.pieces.filter((piece) => [GARMENT_TYPES.JEAN, GARMENT_TYPES.PANTALON, GARMENT_TYPES.JUPE, GARMENT_TYPES.SHORT].includes(piece.type)).length <= 2, JSON.stringify(result.pieces.map((piece) => [piece.name, piece.type, piece.category])));
+  assert.ok(result.pieces.filter((piece) => piece.type === GARMENT_TYPES.ROBE).length <= 2);
+  assert.ok(result.pieces.filter((piece) => [GARMENT_TYPES.VESTE, GARMENT_TYPES.MANTEAU].includes(piece.type)).length <= 1);
+  for (const day of result.days) assert.equal(validateOutfit(day.outfit, day.style, day.weather).isValid, true);
+});
+
+test("un séjour de deux semaines prévoit plus de premières couches qu'une semaine", () => {
+  const variedWardrobe = [
+    ...wardrobe,
+    { id: "tee3", name: "t-shirt vert", category: "haut", colors: "vert" },
+    { id: "tee4", name: "t-shirt rouge", category: "haut", colors: "rouge" },
+    { id: "tee5", name: "t-shirt gris", category: "haut", colors: "gris" },
+  ];
+  const days = (count) => Array.from({ length: count }, (_, index) => ({
+    date: `2026-11-${String(index + 1).padStart(2, "0")}`,
+    weather: { min: 9, max: 17, rain: 10 },
+  }));
+  const week = planTrip({ wardrobe: variedWardrobe, days: days(7), styles: ["casual"] });
+  const fortnight = planTrip({ wardrobe: variedWardrobe, days: days(14), styles: ["casual"] });
+  const fortnightWithLaundry = planTrip({ wardrobe: variedWardrobe, days: days(14), styles: ["casual"], laundryAvailable: true });
+  const countFirstLayers = (plan) => plan.pieces.filter((piece) => piece.packingCategory === "premiere-couche").length;
+  assert.equal(week.success, true);
+  assert.equal(fortnight.success, true);
+  assert.ok(fortnightWithLaundry.totalPieces < fortnight.totalPieces);
+  assert.ok(countFirstLayers(fortnight) > countFirstLayers(week));
+  assert.ok(countFirstLayers(fortnightWithLaundry) < countFirstLayers(fortnight));
 });

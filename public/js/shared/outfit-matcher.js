@@ -420,7 +420,13 @@ export function migrateGarment(piece) {
 }
 
 export function scoreStyle(piece, style) {
-  const text = cleanText(`${piece?.name || ""} ${piece?.description || ""} ${piece?.colors || ""}`);
+  const text = cleanText([
+    piece?.name,
+    piece?.description,
+    piece?.colors,
+    piece?.pattern,
+    Array.isArray(piece?.styles) ? piece.styles.join(" ") : "",
+  ].filter(Boolean).join(" "));
   const type = piece?.type || detectGarmentType(piece?.name, piece?.category);
   const styleKey = cleanText(style);
   let score = 0;
@@ -435,7 +441,29 @@ export function scoreStyle(piece, style) {
     add(type === GARMENT_TYPES.PANTALON || type === GARMENT_TYPES.JEAN, 1);
     add(type === GARMENT_TYPES.BASKETS && /noir|blanc/.test(text), 1);
     add((type === GARMENT_TYPES.VESTE || type === GARMENT_TYPES.MANTEAU) && /noir|gris|sombre/.test(text), 1);
-  } else if (["casual", "minimaliste", "streetwear"].includes(styleKey)) {
+  } else if (styleKey === "streetwear") {
+    add(type === GARMENT_TYPES.TSHIRT || type === GARMENT_TYPES.DEBARDEUR, 1);
+    add(type === GARMENT_TYPES.HOODIE, 4);
+    add(
+      (type === GARMENT_TYPES.TSHIRT || type === GARMENT_TYPES.DEBARDEUR) &&
+        /imprime|graphique|logo|slogan|oversize|motif/.test(text),
+      4,
+    );
+    add(
+      (type === GARMENT_TYPES.PANTALON || type === GARMENT_TYPES.JEAN) &&
+        /cargo|jogger|jogging|baggy|ample|oversize|loose|denim/.test(text),
+      4,
+    );
+    add(type === GARMENT_TYPES.PANTALON || type === GARMENT_TYPES.JEAN, 1);
+    add(type === GARMENT_TYPES.BASKETS, 2);
+    add(
+      (type === GARMENT_TYPES.VESTE || type === GARMENT_TYPES.MANTEAU) &&
+        /bomber|parka|denim|oversize|blouson/.test(text),
+      2,
+    );
+    add(/noir|blanc|gris|kaki|bleu|rouge/.test(text), 1);
+    return Math.min(8, score);
+  } else if (["casual", "minimaliste"].includes(styleKey)) {
     add([GARMENT_TYPES.TSHIRT, GARMENT_TYPES.PULL].includes(type) && !/imprime|logo voyant/.test(text), 2);
     add(type === GARMENT_TYPES.HOODIE && styleKey === "streetwear", 2);
     add(/noir|blanc|gris|beige|marine/.test(text), 1);

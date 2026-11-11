@@ -1,6 +1,6 @@
 # TESTS.md — Cas de vérification et résultats
 
-Dix cas principaux, plus onze cas bonus. Les cas automatisés sont exécutés
+Dix cas principaux, plus douze cas bonus. Les cas automatisés sont exécutés
 par `npm test`. Les cas navigateur sont marqués honnêtement « non exécuté »
 lorsqu'ils n'ont pas été joués dans cet environnement.
 
@@ -29,6 +29,7 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 | 19 | Formulaire valise accessible | Automatisé | Pass |
 | 20 | Géocodage destination | Automatisé | Pass |
 | 21 | Météo filtrée sur la période | Automatisé | Pass |
+| 22 | Sauvegarde manuelle de la semaine | Automatisé | Pass |
 
 ## Cas détaillés
 
@@ -170,18 +171,18 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 - **Résultat** : Pass.
 - **Référence** : `tests/trip-planner.test.mjs`.
 
-### Cas 18 — Valise : erreurs, limites et Streetwear
+### Cas 18 — Valise : erreurs, réutilisation et Streetwear
 
-- **Action** : tester l'absence de pull/chemise, une limite de pièces trop basse
-  et un séjour Streetwear avec un polo en garde-robe.
-- **Attendu** : messages précis, sélection refusée si la limite est dépassée,
-  aucun polo ni chemise dans la valise Streetwear.
+- **Action** : tester l'absence de pull/chemise, un séjour de 15 jours avec
+  lessive possible, puis un séjour Streetwear avec un polo en garde-robe.
+- **Attendu** : messages précis, au plus deux bas et deux robes et un manteau
+  réutilisé quand la météo le permet, aucun polo ni chemise en Streetwear.
 - **Résultat** : Pass.
 
 ### Cas 19 — Formulaire valise accessible
 
 - **Action** : inspecter `trip.html` et `trip.js`.
-- **Attendu** : labels, fieldsets, styles, capacité, `aria-live`, liste des
+- **Attendu** : labels, fieldsets, styles, possibilité de lessive, `aria-live`, liste des
   valises, boutons Sauvegarder/Rouvrir/Supprimer et appels météo/planificateur.
 - **Résultat** : Pass.
 - **Référence** : `tests/trip-ui.test.mjs`.
@@ -201,12 +202,59 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
   et pluie.
 - **Résultat** : Pass.
 
+### Cas 22 — Historique des semaines sauvegardées
+
+- **Action** : générer deux semaines en les sauvegardant explicitement, rouvrir
+  la première, la modifier, sauvegarder les changements, puis supprimer une
+  sauvegarde.
+- **Attendu** : la génération seule ne fait aucune écriture ; le bouton
+  « Sauvegarder ma semaine » crée un document distinct dans
+  `users/{uid}/outfits/{weekId}`. Les actions « Rouvrir » et « Supprimer » sont
+  disponibles. Une semaine rouverte puis modifiée met à jour son document après
+  une nouvelle action de sauvegarde.
+- **Résultat** : Pass (branchement Firestore vérifié par test automatisé ; le
+  compte Firebase réel reste à valider manuellement).
+
+### Cas 23 — Réessai automatique d'une journée en échec
+
+- **Action** : lancer la génération complète avec une journée échouée au premier
+  passage.
+- **Attendu** : l'application relance automatiquement cette journée une fois,
+  sans attendre un clic sur « Réessayer cette journée ». Les règles de style et
+  les contraintes de garde-robe restent appliquées.
+- **Résultat** : Pass (branchement vérifié par test automatisé ; la composition
+  réelle dépend des pièces disponibles et du service de validation).
+
+### Cas 24 — Style alternatif si des vêtements manquent
+
+- **Action** : afficher une journée impossible à composer et choisir une
+  proposition de style alternatif.
+- **Attendu** : le bandeau propose Casual, Rock ou Streetwear, jamais Chic ni
+  Minimaliste ; le choix met à jour le style de la journée et relance sa tenue.
+- **Résultat** : Pass (présence du bandeau, liste autorisée et branchement de
+  génération couverts par test automatisé).
+
+### Cas 25 — Première et seconde couches lisibles dans les tenues
+
+- **Action** : afficher une tenue avec t-shirt et pull.
+- **Attendu** : le t-shirt est étiqueté « Première couche » et le pull
+  « Seconde couche », même si la catégorie source est « haut » pour les deux.
+- **Résultat** : Pass (mapping de slot et rendu vérifiés par test automatisé).
+
+### Cas 26 — Choix de pièces Streetwear reconnaissables
+
+- **Action** : composer une tenue Streetwear avec des basiques et des pièces
+  marquées disponibles dans la garde-robe.
+- **Attendu** : préférence au t-shirt graphique, au hoodie oversize et au
+  pantalon cargo sans enfreindre les règles de base et de couche chaude.
+- **Résultat** : Pass (test déterministe du générateur).
+
 ## Commandes et résultats
 
 ```text
 npm test
-ℹ tests 92
-ℹ pass 92
+ℹ tests 100
+ℹ pass 100
 ℹ fail 0
 ```
 
