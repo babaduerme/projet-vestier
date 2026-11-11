@@ -250,7 +250,10 @@ export function planTrip({ wardrobe, days, styles, maxPieces = null, cabin = fal
       styleLabel: getStyleLabel(chosen.style),
       outfit: chosen.outfit,
       possibleCount: possible.length,
-      alternatives: possible.slice(0, 4).map((candidate) => candidate.outfit),
+      alternatives: possible
+        .filter((candidate) => candidate.key !== chosen.key)
+        .slice(0, 4)
+        .map((candidate) => candidate.outfit),
     };
   });
 

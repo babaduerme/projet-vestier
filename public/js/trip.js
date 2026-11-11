@@ -491,6 +491,7 @@ function buildTripData() {
         style: day.style,
         styleLabel: day.styleLabel,
         outfit: day.outfit,
+        alternatives: day.alternatives || [],
         possibleCount: day.possibleCount || 0,
       })),
       totalPieces: currentPlan.totalPieces || 0,
