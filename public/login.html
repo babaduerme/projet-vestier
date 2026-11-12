@@ -6,7 +6,7 @@
 <title>StyleAI - Connexion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Feuilles de style organisées -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
@@ -19,8 +19,6 @@
     <a class="brand" href="index.html">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.8 6.7L12 16.8l-6 3.7 1.8-6.7-5.3-4.4L9.4 9 12 2.5Z"/></svg></span>StyleAI
     </a>
-    <div class="art" aria-hidden="true">
-      <div class="garment gray"></div>
       <div class="garment brown"></div>
       <div class="garment navy"></div>
     </div>
@@ -48,7 +46,7 @@
         <button type="submit" class="submit-btn u-inline-login-1">Se connecter</button>
         <p class="switch-copy">Pas encore de compte ? <a href="#" data-switch="signup-form">Créer un compte</a></p>
       </form>
-      <form id="signup-form" class="signup-form" style="display: none;">
+      <form id="signup-form" class="signup-form">
         <div class="form-group">
           <label for="signup-name">Prénom</label>
           <input type="text" id="signup-name" required aria-required="true" aria-describedby="error-message" autocomplete="given-name">
@@ -68,5 +66,6 @@
   </section>
 </main>
 <script type="module" src="js/auth/login.js" defer></script>
+  <script type="module" src="js/core/visual-effects.js"></script>
 </body>
 </html>

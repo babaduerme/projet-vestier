@@ -89,6 +89,16 @@ const resetWeekBtn = document.getElementById("reset-week-btn");
 const cityInput = document.getElementById("city-input");
 const cityWeatherStatus = document.getElementById("city-weather-status");
 
+function scrollToWeeklyOutfits() {
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  requestAnimationFrame(() => {
+    outfitsContainer?.scrollIntoView({
+      behavior: reducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  });
+}
+
 initWeatherControls();
 
 // Initialisation immédiate du planning local (pour affichage instantané sans attendre Firebase)
@@ -202,13 +212,13 @@ const CATEGORY_ALIASES = new Map([
 ]);
 
 const CATEGORY_EMOJIS = {
-  haut: "👕",
-  bas: "👖",
-  robe: "👗",
-  manteau: "🧥",
-  chaussures: "👟",
-  accessoires: "👜",
-  ensemble: "👘",
+  haut: "Vêtement",
+  bas: "Vêtement",
+  robe: "Vêtement",
+  manteau: "Vêtement",
+  chaussures: "Vêtement",
+  accessoires: "Vêtement",
+  ensemble: "Vêtement",
 };
 
 function normalizeWardrobePiece(piece) {
@@ -286,7 +296,7 @@ function updateAllDayWeatherChips() {
     if (!weather) {
       chip.className = "day-card-weather is-unavailable";
       chip.innerHTML = `
-        <span class="weather-chip-icon" aria-hidden="true">⛅</span>
+        <span class="weather-chip-icon" aria-hidden="true">—</span>
         <span class="weather-chip-text">Météo indisponible</span>
       `;
       return;
@@ -300,8 +310,8 @@ function updateAllDayWeatherChips() {
         <span class="weather-chip-condition">${weather.label}</span>
       </div>
       <div class="weather-row-details">
-        <span class="weather-chip-stat">💧 ${weather.rain}%</span>
-        <span class="weather-chip-stat">💨 ${weather.wind} km/h</span>
+        <span class="weather-chip-stat">Pluie ${weather.rain}%</span>
+        <span class="weather-chip-stat">Vent ${weather.wind} km/h</span>
       </div>
     `;
     chip.title = `${weather.label} · ${weather.min} à ${weather.max} °C · Pluie ${weather.rain}% · Vent ${weather.wind} km/h`;
@@ -648,8 +658,9 @@ savedWeekList?.addEventListener("click", (event) => {
     if (!savedWeek) return;
     activeSavedWeekId = savedWeek.id === "local-cache" ? null : savedWeek.id;
     latestGeneratedOutfits = savedWeek.outfits || [];
-    renderWeeklyOutfits(latestGeneratedOutfits);
     outfitsContainer?.classList.remove("hidden");
+    renderWeeklyOutfits(latestGeneratedOutfits);
+    scrollToWeeklyOutfits();
     if (outfitsSavedIndicator) outfitsSavedIndicator.textContent = "Tenues enregistrées";
     return;
   }
@@ -1109,8 +1120,9 @@ async function generateWeeklyOutfitsReliable() {
 
     if (currentGeneration !== generationVersion || controller.signal.aborted) return;
 
-    renderWeeklyOutfits(weeklyOutfits);
     outfitsContainer?.classList.remove("hidden");
+    renderWeeklyOutfits(weeklyOutfits);
+    scrollToWeeklyOutfits();
     markWeeklyOutfitsChanged(weeklyOutfits);
     const failedDayKeys = weeklyOutfits.filter((outfit) => outfit.isError).map((outfit) => outfit.dayKey);
     if (failedDayKeys.length > 0) {
@@ -1276,7 +1288,33 @@ function renderOutfits(outfits, styleName, title = null) {
     piecesContainer.className = "outfit-pieces";
 
     if (!isMissing) {
+      const layerOrder = [
+        [SLOTS.BASE, "Première couche"],
+        [SLOTS.COUCHE, "Seconde couche"],
+        [SLOTS.VESTE, "Troisième couche · manteau / veste"],
+        [SLOTS.BAS, "Bas"],
+        [SLOTS.ROBE, "Robes"],
+        [SLOTS.CHAUSSURES, "Chaussures"],
+        [SLOTS.ACCESSOIRE, "Accessoires"],
+      ];
+      const piecesBySlot = new Map();
       outfit.pieces.forEach((piece) => {
+        const slot = normalizeGarmentSlot(piece);
+        if (!piecesBySlot.has(slot)) piecesBySlot.set(slot, []);
+        piecesBySlot.get(slot).push(piece);
+      });
+
+      layerOrder.forEach(([slot, label]) => {
+        const slotPieces = piecesBySlot.get(slot);
+        if (!slotPieces?.length) return;
+        const layerSection = document.createElement("section");
+        layerSection.className = "outfit-layer-section";
+        const layerHeading = document.createElement("h4");
+        layerHeading.className = "outfit-layer-heading";
+        layerHeading.textContent = label;
+        const layerPieces = document.createElement("div");
+        layerPieces.className = "outfit-layer-pieces";
+        slotPieces.forEach((piece) => {
         const pieceDiv = document.createElement("div");
         pieceDiv.className = "outfit-piece";
 
@@ -1285,14 +1323,15 @@ function renderOutfits(outfits, styleName, title = null) {
           thumbnail = document.createElement("img");
           thumbnail.loading = "lazy";
           thumbnail.decoding = "async";
+          thumbnail.width = 240;
+          thumbnail.height = 320;
           thumbnail.src = piece.imageUrl;
           thumbnail.alt = piece.name || "Vêtement";
           thumbnail.className = "piece-thumb";
         } else {
-          const emoji = CATEGORY_EMOJIS[piece.category] || "👕";
           thumbnail = document.createElement("div");
           thumbnail.className = "piece-thumb";
-          thumbnail.textContent = emoji;
+          thumbnail.setAttribute("aria-label", CATEGORY_EMOJIS[piece.category] || "Vêtement");
         }
         const pieceInfo = document.createElement("div");
         pieceInfo.className = "piece-info";
@@ -1304,7 +1343,10 @@ function renderOutfits(outfits, styleName, title = null) {
         pieceCategory.textContent = getOutfitPieceLabel(piece);
         pieceInfo.append(pieceName, pieceCategory);
         pieceDiv.append(thumbnail, pieceInfo);
-        piecesContainer.appendChild(pieceDiv);
+        layerPieces.appendChild(pieceDiv);
+      });
+        layerSection.append(layerHeading, layerPieces);
+        piecesContainer.appendChild(layerSection);
       });
       card.appendChild(piecesContainer);
 

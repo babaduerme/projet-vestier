@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const html = await readFile(new URL("../public/wardrobe.html", import.meta.url), "utf8");
 const script = await readFile(new URL("../public/js/wardrobe/wardrobe.js", import.meta.url), "utf8");
+const classifier = await readFile(new URL("../public/js/wardrobe/garment-classifier.js", import.meta.url), "utf8");
 
 test("la modale propose la caméra et le sélecteur de documents", () => {
   assert.match(html, /id="camera-trigger"/);
@@ -34,4 +35,12 @@ test("caméra et documents alimentent le même traitement d'image", () => {
   assert.match(script, /fileInput\?\.addEventListener\("change", handleSelectedImage\)/);
   assert.match(script, /cameraInput\?\.addEventListener\("change", handleSelectedImage\)/);
   assert.match(script, /processSelectedFile\(file\);\n\}/);
+});
+
+test("le modèle commence à charger dès le choix de la photo et classe une seule image", () => {
+  assert.match(script, /preloadGarmentClassifier\(\)/);
+  assert.match(classifier, /export function preloadGarmentClassifier\(\)/);
+  assert.match(classifier, /canvas\.width = 512;[\s\S]*?return \[canvas\.toDataURL/);
+  assert.match(classifier, /const views = buildViews\(image\)/);
+  assert.match(classifier, /for \(const view of views\)/);
 });

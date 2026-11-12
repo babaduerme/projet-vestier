@@ -6,12 +6,12 @@
     <title>StyleAI - Ma Garde-robe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="prefetch" href="outfits.html" as="document">
     <link rel="modulepreload" href="js/outfits/index.js">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/pages/wardrobe.css">
+    <link rel="stylesheet" href="css/pages/wardrobe.css?v=20261112-v13">
     <script src="js/core/theme.js?v=20261107-v12" defer></script>
 </head>
 <body>
@@ -19,9 +19,9 @@
     <nav class="navbar">
         <a href="wardrobe.html" class="nav-brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.8 6.7L12 16.8l-6 3.7 1.8-6.7-5.3-4.4L9.4 9 12 2.5Z"/></svg></span>StyleAI</a>
         <div class="nav-links">
-            <a href="wardrobe.html" class="active" aria-current="page">Ma Garde-robe</a>
-            <a href="outfits.html">Mes Tenues</a>
-            <a href="trip.html">Mode valise</a>
+            <a href="wardrobe.html" class="active" aria-current="page"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35"><path d="M4 8h16l-1 13H5L4 8Zm4 0V5a4 4 0 0 1 8 0v3M8 12h8"/></svg><span>Ma Garde-robe</span></a>
+            <a href="outfits.html"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35"><rect x="3" y="4" width="18" height="17"/><path d="M8 2v4M16 2v4M3 9h18M7 13h3m4 0h3M7 17h3"/></svg><span>Mes Tenues</span></a>
+            <a href="trip.html"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35"><rect x="4" y="7" width="16" height="14"/><path d="M9 7V4h6v3M4 12h16M9 12v2m6-2v2"/></svg><span>Mode valise</span></a>
         </div>
         <div id="user-info">
             <span id="user-display">Chargement...</span>
@@ -70,7 +70,7 @@
         </button>
 
         <div id="empty-state" class="empty-state">
-            <div class="empty-emoji" aria-hidden="true">👗</div>
+            <div class="empty-emoji" aria-hidden="true"></div>
             <h2>Commence par ajouter des vêtements</h2>
             <p class="u-inline-wardrobe-1">Ta garde-robe est vide pour le moment.</p>
             <button class="btn btn-primary" id="empty-wardrobe-add-btn">Ajouter mon premier vêtement</button>
@@ -85,18 +85,18 @@
             
             <form id="add-cloth-form">
                 <div class="upload-area" id="upload-area">
-                    <div class="upload-icon">📷</div>
+                    <div class="upload-icon" aria-hidden="true"></div>
                     <div class="upload-actions">
                         <button type="button" class="upload-trigger upload-choice" id="camera-trigger">
-                            📷 Prendre une photo
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3v12H4zM12 10a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"/></svg> Prendre une photo
                         </button>
                         <button type="button" class="upload-trigger upload-choice" id="gallery-trigger">
-                            🖼️ Choisir une image
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m4 18 5-5 3 3 3-4 5 6"/></svg> Choisir une image
                         </button>
                     </div>
                     <p class="u-inline-wardrobe-2">JPG, PNG (max 5MB)</p>
-                    <input type="file" id="file-input" accept="image/*" class="u-inline-wardrobe-3">
-                    <input type="file" id="camera-input" accept="image/*" capture="environment" class="u-inline-wardrobe-3">
+                    <input type="file" id="file-input" accept="image/*" class="visually-hidden">
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" class="visually-hidden">
                     <img id="img-preview" alt="Aperçu du vêtement sélectionné" width="200" height="200">
                     <div id="ai-analyzing" class="u-inline-wardrobe-4">
                         ✨ Analyse IA en cours (détection type & couleur)...
@@ -126,10 +126,10 @@
                     <span class="field-label" id="pattern-label">Aspect du vêtement</span>
                     <div class="pattern-toggle">
                         <button type="button" class="pattern-btn active" data-pattern="uni" id="btn-pattern-uni">
-                            <span>⚪</span> Uni
+                            Uni
                         </button>
                         <button type="button" class="pattern-btn" data-pattern="motif" id="btn-pattern-motif">
-                            <span>🎨</span> À motifs / Imprimé
+                            À motifs / Imprimé
                         </button>
                     </div>
                     <input type="hidden" id="cloth-pattern" value="uni">
@@ -199,5 +199,6 @@
     </div>
 
     <script type="module" src="js/wardrobe/wardrobe.js"></script>
+  <script type="module" src="js/core/visual-effects.js"></script>
 </body>
 </html>

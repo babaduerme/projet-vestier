@@ -67,6 +67,7 @@ const NARROW_TIE_MIN = 0.04;
 const KNOWN_ITEMS = new Map(ITEMS.map(([name, category]) => [name, category]));
 
 let classifierPromise = null;
+let classifierProgressCallback = null;
 
 function confident(itemName, extra = {}) {
   const category = KNOWN_ITEMS.get(itemName);
@@ -75,14 +76,15 @@ function confident(itemName, extra = {}) {
 }
 
 function getClassifier(onProgress) {
+  if (onProgress) classifierProgressCallback = onProgress;
   if (!classifierPromise) {
     classifierPromise = import(TRANSFORMERS_URL)
       .then(({ env, pipeline }) => {
         env.allowLocalModels = false;
         return pipeline("zero-shot-image-classification", CLIP_MODEL, {
           progress_callback: (progress) => {
-            if (progress?.status === "progress" && onProgress) {
-              onProgress(Math.round(progress.progress || 0));
+            if (progress?.status === "progress" && classifierProgressCallback) {
+              classifierProgressCallback(Math.round(progress.progress || 0));
             }
           },
         });
@@ -96,33 +98,24 @@ function getClassifier(onProgress) {
   return classifierPromise;
 }
 
-function buildViews(image) {
-  const views = [image.src];
-  const { naturalWidth: width, naturalHeight: height } = image;
-  if (!width || !height) return views;
+/** Précharge le modèle pendant que la personne choisit sa photo. */
+export function preloadGarmentClassifier() {
+  void getClassifier();
+}
 
-  // Limiter la taille des vues évite de créer plusieurs dataURL géants pour
-  // une photo de téléphone, sans perdre les informations utiles au modèle.
-  const cropWidth = Math.min(512, Math.round(width * 0.65));
-  const cropHeight = Math.min(512, Math.round(height * 0.65));
+function buildViews(image) {
+  const { naturalWidth: width, naturalHeight: height } = image;
+  if (!width || !height) return [image.src];
+
+  // Une seule image entière et réduite suffit au modèle, sans doubler
+  // l'inférence avec un second cadrage central.
   const canvas = document.createElement("canvas");
-  canvas.width = cropWidth;
-  canvas.height = cropHeight;
-  canvas
-    .getContext("2d")
-    .drawImage(
-      image,
-      (width - cropWidth) / 2,
-      (height - cropHeight) / 2,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      cropWidth,
-      cropHeight,
-    );
-  views.push(canvas.toDataURL("image/jpeg", 0.9));
-  return views;
+  canvas.width = 512;
+  canvas.height = 512;
+  const context = canvas.getContext("2d");
+  if (!context) return [image.src];
+  drawContain(context, image, 512);
+  return [canvas.toDataURL("image/jpeg", 0.85)];
 }
 
 function drawContain(context, image, size) {

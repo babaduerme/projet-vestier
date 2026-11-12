@@ -193,3 +193,31 @@ t-shirt, hoodie incompatible, Minimaliste) sont corrigés et couverts par des
 tests. Les écarts restants sont surtout architecturaux : CRUD direct Firestore,
 Cloud Functions non utilisées, photo manuscrite absente et parcours navigateur
 non exécuté dans cet environnement. Ils sont documentés plutôt que masqués.
+
+## 6. Revue du redesign (12 novembre 2026)
+
+### Spécification
+
+- Direction nocturne, photos éditoriales, tailles responsive, navigation mobile et mouvements réduits : couverts dans les feuilles CSS partagées et spécifiques.
+- IDs, classes, attributs de formulaire, gestionnaires et scripts métier préservés ; contrôle statique ajouté pour les points d’entrée principaux.
+- Images locales WebP, dimensions déclarées et chargement différé hors hero ; les photos d’utilisateurs gardent leur source Cloudinary.
+
+### Standards et limites
+
+- Les animations nouvelles se limitent à `transform` et `opacity`, avec `prefers-reduced-motion`.
+- Les vieux thèmes et dessins de vêtements ont été retirés des styles actifs ; les vignettes manquantes ont des icônes SVG filaires.
+- `npm test` : 107 réussis, 0 échec.
+- Contrôle visuel navigateur réalisé à 360 px et sur la page de planning. La navigation Firebase réelle, l’upload, les états vides authentifiés et chaque largeur intermédiaire restent à vérifier par le propriétaire.
+
+### Résultat
+
+Aucun changement métier ni dépendance ajoutée au projet. Le formateur Prettier a été utilisé ponctuellement via `npx` ; les dépendances `package.json` n’ont pas changé.
+
+## 7. Ajustements après retours d'usage (12 novembre 2026)
+
+- Les vêtements d'une tenue sont rendus en sections verticales par slot (base, couche chaude, veste, bas, robe, chaussures, accessoires). Les règles et objets générés restent inchangés.
+- Sur la garde-robe, l'action Modifier et Supprimer partagent une ligne ; les champs natifs de sélection de fichiers sont masqués derrière les contrôles visibles. La palette utilise maintenant des couleurs visibles distinctes.
+- Le pictogramme du dépôt d'image est centré et agrandi en arrière-plan des actions de photo et de galerie.
+- La reconnaissance précharge le modèle dès le choix d'une source photo et n'effectue plus deux passes d'inférence sur la même image. Le premier téléchargement reste une contrainte réseau : le fichier quantifié de CLIP fait environ 154 MB selon [le dépôt officiel du modèle](https://huggingface.co/Xenova/clip-vit-base-patch32/tree/main/onnx).
+- Le planning de semaine met davantage en évidence les limites de cartes et « Aujourd'hui » ; génération et réouverture affichent immédiatement les tenues, avec défilement vers le résultat. Les commandes de sauvegarde sont plus compactes et lisibles sur mobile.
+- `npm test` : 107 réussis, 0 échec ; `node --check` passe pour les scripts modifiés.

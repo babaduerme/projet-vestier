@@ -1,56 +1,13 @@
-/* ===== Page 404 ===== */
-
-body {
+.error-page {
   display: grid;
-  min-height: 100vh;
   place-items: center;
-  padding: 24px;
-}
-
-#message {
-  width: min(100%, 560px);
-  padding: clamp(32px, 7vw, 64px);
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-radius-lg);
-  background: var(--ui-card);
-  box-shadow: var(--ui-shadow);
+  min-height: 100dvh;
+  padding: 1.5rem;
   text-align: center;
 }
-
-.error-code {
-  margin: 0 0 12px;
-  color: var(--ui-clay-dark);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.error-page main {
+  max-width: 560px;
 }
-
-#message h1 {
-  margin-bottom: 16px;
-  font-size: clamp(2.2rem, 7vw, 4rem);
-  line-height: 1;
-}
-
-#message > p:not(.error-code) {
-  margin: 0 auto 28px;
-  max-width: 34rem;
-  color: var(--ui-muted);
-}
-
-#message a {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-clay);
-  color: #fffaf4;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-#message a:hover {
-  background: var(--ui-clay-dark);
+.error-page h1 {
+  font: 500 clamp(3rem, 9vw, 6rem)/0.9 var(--font-display);
 }

@@ -26,6 +26,10 @@ ce que j'ai corrigé, et pourquoi. Les échecs sont conservés.
 | 19 | Proposer un style de remplacement | « Si des vêtements manquent, afficher un bandeau et proposer un autre style, sauf Chic et Minimaliste. » | Correct | Les cartes en échec proposent Casual, Rock et Streetwear (sauf le style déjà tenté). Le choix met à jour le planning du jour puis relance sa génération, sans modifier les règles métier des styles. |
 | 20 | Clarifier les couches dans une tenue | Capture d'une tenue Streetwear affichant le t-shirt et le pull tous deux comme « haut ». | Corrigé | L'affichage des vêtements utilise désormais leur slot normalisé : « Première couche » et « Seconde couche » sont distinguées même si leurs anciennes catégories stockées sont identiques. |
 | 21 | Rendre le style Streetwear reconnaissable | « La génération Streetwear ressemble à du Minimaliste. » | Corrigé quand les pièces adaptées existent | Le classement Streetwear favorise maintenant les t-shirts graphiques/oversize, hoodies, bas cargo/jogger, baskets et vestes urbaines. Un test rouge puis vert vérifie le choix de pièces marquées face aux basiques. |
+| 22 | Rendre le planning et les sauvegardes lisibles sur mobile | Captures : démarcation des jours faible, badge Aujourd'hui collé, tenues invisibles après génération, sauvegardes difficiles à rouvrir. | Corrigé côté interface | Cartes du planning uniformisées et renforcées, badge séparé, cartes de tenues ramenées sous le planning et défilement vers le résultat après génération/rouverture ; boutons de sauvegarde rapprochés et stylés. |
+| 23 | Lire les tenues par couches | « Les vêtements sont plus lisibles en colonne et par section : première, seconde et troisième couche. » | Corrigé | Chaque tenue est rendue en sections verticales par slot normalisé : première couche, seconde couche, manteau/veste, puis bas, robe, chaussures et accessoires. Aucun changement au générateur. |
+| 24 | Simplifier la photo et la palette de couleur | Captures : champs fichier natifs en double, pastilles toutes noires, icône de photo trop petite et mal placée. | Corrigé côté interface | Champs fichier masqués derrière les deux boutons existants, palette colorée par attribut `data-color`, bouton Modifier réduit et aligné avec Supprimer, icône SVG agrandie et centrée en arrière-plan. |
+| 25 | Accélérer la reconnaissance d'un vêtement | « Le modèle IA met beaucoup trop de temps pour reconnaître un vêtement. » | Amélioré, avec limite de premier chargement | Le modèle démarre dès le choix de la caméra ou de la galerie ; une seule image entière redimensionnée à 512 px est maintenant classée au lieu de deux vues séquentielles. Le premier téléchargement réseau du modèle reste nécessaire. |
 
 ## Échecs analysés
 
@@ -100,3 +104,10 @@ Cherche : dépendances inutiles, validation serveur absente, secrets, erreurs no
 gérées, droits non vérifiés, code mort, duplication, écart au périmètre.
 Classe par gravité et assume ce qui n'est pas corrigé.
 ```
+
+### 6. Refonte UI « Maison de couture nocturne » (12 novembre 2026)
+
+- **Intention** : remplacer la direction claire crème/terracotta par l’univers encre, vert bouteille et champagne ; rendre les pages mobiles et animées.
+- **Verdict** : implémentée côté présentation ; contrats HTML/JS et parcours métier préservés.
+- **Preuves** : `docs/redesign-spec.md`, `docs/redesign-decisions.md`, huit issues locales et `tests/redesign-contracts.test.mjs` ; suite complète à 107 tests.
+- **Limite assumée** : le menu mobile se limite aux trois pages réelles, car le produit n’a pas de page Profil. Le parcours Firebase connecté et le chargement hors ligne sont à vérifier sur le poste de présentation.

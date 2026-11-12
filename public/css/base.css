@@ -1,26 +1,22 @@
-/* ===== Fondations du design system Vestiaire ===== */
 :root {
-  color-scheme: light;
-  --ui-ink: #241f1c;
-  --ui-muted: #5f5751;
-  --ui-paper: #f6f1eb;
-  --ui-bg: #f6f1eb;
-  --ui-card: #fffcf8;
-  --ui-card-raised: #ffffff;
-  --ui-sand: #e5dcd3;
-  --ui-clay: #b86f4f;
-  --ui-clay-dark: #874b38;
-  --ui-green: #5c7468;
-  --ui-amber: #b77931;
-  --ui-danger: #b42318;
-  --ui-line: #e5dcd3;
-  --ui-focus: #005fcc;
-  --ui-shadow: 0 12px 32px rgba(58, 42, 31, 0.08);
-  --ui-shadow-hover: 0 18px 42px rgba(58, 42, 31, 0.13);
-  --ui-radius-sm: 10px;
-  --ui-radius-md: 16px;
-  --ui-radius-lg: 24px;
-  --ui-radius: var(--ui-radius-lg);
+  color-scheme: dark;
+  --ui-ink: #f4efe6;
+  --ui-muted: rgba(244, 239, 230, 0.72);
+  --ui-bg: #0b0b0c;
+  --ui-card: #121415;
+  --ui-card-raised: #1a1d1e;
+  --ui-line: rgba(255, 255, 255, 0.1);
+  --ui-focus: #eadbc0;
+  --ui-clay: #d8c3a0;
+  --ui-clay-dark: #0b0b0c;
+  --ui-green: #0f2a24;
+  --ui-danger: #8c2f39;
+  --ui-shadow: none;
+  --ui-shadow-hover: 0 0 28px rgba(216, 195, 160, 0.14);
+  --ui-radius-sm: 3px;
+  --ui-radius-md: 3px;
+  --ui-radius-lg: 3px;
+  --ui-radius: 3px;
   --ui-pill: 999px;
   --ui-space-1: 0.25rem;
   --ui-space-2: 0.5rem;
@@ -30,42 +26,37 @@
   --ui-space-8: 2rem;
   --ui-space-12: 3rem;
   --ui-space-16: 4rem;
-
-  /* Aliases de compatibilité */
   --color-text: var(--ui-ink);
   --color-muted: var(--ui-muted);
   --color-surface: var(--ui-bg);
-  --color-white: #ffffff;
+  --color-white: #fff;
   --color-border: var(--ui-line);
   --color-focus: var(--ui-focus);
   --ink: var(--ui-ink);
   --muted: var(--ui-muted);
   --cream: var(--ui-bg);
-  --white: #ffffff;
+  --white: #fff;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: Inter, system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 600ms;
 }
-
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
-
 html {
   scroll-behavior: smooth;
 }
-
 body {
   min-width: 320px;
   margin: 0;
-  background:
-    radial-gradient(circle at 85% 0%, rgba(255, 252, 248, 0.9) 0, transparent 32rem),
-    var(--ui-bg);
+  background: var(--ui-bg);
   color: var(--ui-ink);
-  font-family: "DM Sans", Inter, system-ui, -apple-system, sans-serif;
-  line-height: 1.45;
+  font: 400 16px/1.55 var(--font-body);
   text-rendering: optimizeLegibility;
 }
-
 h1,
 h2,
 h3,
@@ -76,47 +67,60 @@ h4,
 .cloth-name,
 .piece-name {
   margin-top: 0;
-  font-family: Manrope, "DM Sans", system-ui, sans-serif;
-  letter-spacing: -0.035em;
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.025em;
 }
-
 button,
 input,
 select,
 textarea {
   font: inherit;
 }
-
 button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
-
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 3px solid var(--ui-focus);
-  outline-offset: 3px;
+a {
+  color: inherit;
 }
-
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 4px;
+}
 .skip-link {
   position: absolute;
   top: -4rem;
   left: 1rem;
   z-index: 10000;
   padding: 0.75rem 1rem;
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-ink);
-  color: var(--ui-card);
-  text-decoration: none;
+  background: var(--ui-clay);
+  color: var(--ui-bg);
 }
-
 .skip-link:focus {
   top: 1rem;
 }
-
 .hidden {
   display: none !important;
 }
-
+.container {
+  width: min(1440px, calc(100% - 48px));
+  margin: 0 auto;
+}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+img {
+  max-width: 100%;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -125,5 +129,128 @@ a {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 650ms var(--ease),
+    transform 650ms var(--ease);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.skeleton-shimmer {
+  display: inline-block;
+  height: 18px;
+  vertical-align: middle;
+}
+.skeleton-shimmer-wide {
+  width: min(220px, 58vw);
+  margin-right: 12px;
+}
+.skeleton-shimmer-medium {
+  width: min(140px, 36vw);
+}
+.cloth-image.is-error {
+  display: none;
+}
+.skeleton-shimmer,
+.cloth-img,
+.trip-suitcase-item,
+.trip-day-piece {
+  position: relative;
+  overflow: hidden;
+  background: #1a1d1e;
+  background-image: none;
+  animation: none;
+}
+.skeleton-shimmer::before,
+.cloth-img::before,
+.trip-suitcase-item::before,
+.trip-day-piece::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(216, 195, 160, 0.12) 45%,
+    transparent 70%
+  );
+  transform: translateX(-110%);
+  animation: sheen 1.7s var(--ease) infinite;
+}
+.cloth-img.has-image::before,
+.trip-suitcase-item.has-image::before,
+.trip-day-piece.has-image::before {
+  opacity: 0;
+  animation: none;
+}
+@keyframes sheen {
+  to {
+    transform: translateX(110%);
+  }
+}
+body {
+  animation: page-enter 0.5s var(--ease) both;
+}
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.navbar:not(.is-scrolled) {
+  background: rgba(11, 11, 12, 0.72);
+}
+.navbar.is-scrolled {
+  transform: scaleY(0.98);
+  transform-origin: top;
+}
+.site-header.is-scrolled {
+  opacity: 0.94;
+}
+.feature-grid > .reveal:nth-child(2),
+.clothes-grid > .reveal:nth-child(2),
+.outfits-grid > .reveal:nth-child(2) {
+  transition-delay: 40ms;
+}
+.feature-grid > .reveal:nth-child(3),
+.clothes-grid > .reveal:nth-child(3),
+.outfits-grid > .reveal:nth-child(3) {
+  transition-delay: 80ms;
+}
+.clothes-grid > .reveal:nth-child(4),
+.outfits-grid > .reveal:nth-child(4) {
+  transition-delay: 120ms;
+}
+.clothes-grid > .reveal:nth-child(5),
+.outfits-grid > .reveal:nth-child(5) {
+  transition-delay: 160ms;
+}
+.clothes-grid > .reveal:nth-child(6),
+.outfits-grid > .reveal:nth-child(6) {
+  transition-delay: 200ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  body {
+    animation: none;
+  }
+  .navbar.is-scrolled {
+    transform: none;
   }
 }

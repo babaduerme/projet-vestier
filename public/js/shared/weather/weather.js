@@ -191,8 +191,8 @@ function renderWeatherSkeleton() {
   const title = document.createElement("div");
   title.className = "weather-skeleton-title skeleton-line";
   title.innerHTML = `
-    <span class="skeleton-shimmer" style="display: inline-block; width: 220px; height: 18px; margin-right: 12px; vertical-align: middle;"></span>
-    <span class="skeleton-shimmer" style="display: inline-block; width: 140px; height: 18px; vertical-align: middle;"></span>
+    <span class="skeleton-shimmer skeleton-shimmer-wide"></span>
+    <span class="skeleton-shimmer skeleton-shimmer-medium"></span>
   `;
 
   weatherSummary.appendChild(title);
@@ -307,7 +307,7 @@ export async function loadWeatherForecast(location = getSavedWeatherLocation()) 
       const todayLabel = document.createElement("strong");
       todayLabel.textContent = "Aujourd'hui :";
       const todayDetails = document.createElement("span");
-      todayDetails.textContent = ` ${todayWeather.label} · ${todayWeather.min}° à ${todayWeather.max}°C · 💧 ${todayWeather.rain}% · 💨 ${todayWeather.wind} km/h`;
+      todayDetails.textContent = ` ${todayWeather.label} · ${todayWeather.min}° à ${todayWeather.max}°C · Pluie ${todayWeather.rain}% · Vent ${todayWeather.wind} km/h`;
       todayInfo.append(todayLabel, todayDetails);
 
       const helperTag = document.createElement("span");
@@ -336,7 +336,7 @@ export async function loadWeatherForecast(location = getSavedWeatherLocation()) 
       const fallbackMsg = document.createElement("div");
       fallbackMsg.className = "weather-fallback-message";
       fallbackMsg.innerHTML = `
-        <span class="weather-fallback-icon" aria-hidden="true">⛅</span>
+        <span class="weather-fallback-icon" aria-hidden="true">—</span>
         <div>
           <strong>Météo momentanément indisponible</strong>
           <p>Tu peux composer et générer tes tenues normalement sans adaptation météo.</p>

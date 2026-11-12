@@ -6,7 +6,10 @@ import {
 import { initAuth } from "../auth/auth.js";
 import { showToast } from "../core/ui-utils.js";
 import { extractDominantColors } from "./color-analysis.js";
-import { classifyGarment } from "./garment-classifier.js";
+import {
+  classifyGarment,
+  preloadGarmentClassifier,
+} from "./garment-classifier.js";
 import {
   GARMENT_TYPES,
   SLOTS,
@@ -260,11 +263,13 @@ uploadArea?.addEventListener("click", (event) => {
 
 cameraTrigger?.addEventListener("click", (event) => {
   event.stopPropagation();
+  preloadGarmentClassifier();
   void openCameraCapture();
 });
 
 galleryTrigger?.addEventListener("click", (event) => {
   event.stopPropagation();
+  preloadGarmentClassifier();
   fileInput.click();
 });
 
@@ -923,11 +928,13 @@ function renderClothes() {
         image.className = "cloth-image";
         image.loading = "lazy";
         image.decoding = "async";
+        image.width = 360;
+        image.height = 480;
         image.src = cloth.imageUrl;
         image.alt = cloth.name || "Vêtement";
         imageContainer.appendChild(image);
       } else {
-        imageContainer.textContent = "👕";
+        imageContainer.setAttribute("aria-label", "Photo de vêtement non disponible");
       }
       const info = document.createElement("div");
       info.className = "cloth-info";
@@ -939,7 +946,7 @@ function renderClothes() {
         categoryLabels[cloth.category] || cloth.category || "";
       const pattern = document.createElement("span");
       pattern.className = `cloth-badge cloth-pattern-badge ${cloth.pattern === "motif" ? "is-pattern" : "is-plain"}`;
-      pattern.textContent = cloth.pattern === "motif" ? "🎨 Motif" : "⚪ Uni";
+      pattern.textContent = cloth.pattern === "motif" ? "Motif" : "Uni";
       meta.append(category, pattern);
       if (cloth.type && cloth.type !== "autre") {
         const typeBadge = document.createElement("span");
@@ -951,7 +958,7 @@ function renderClothes() {
         const warningBadge = document.createElement("span");
         warningBadge.className = "cloth-badge cloth-warning-badge";
         warningBadge.title = "Couleur incertaine par rapport au nom du vêtement (modifiable)";
-        warningBadge.textContent = "⚠️ Couleur ?";
+        warningBadge.textContent = "Couleur à vérifier";
         meta.appendChild(warningBadge);
       }
       const name = document.createElement("h3");
@@ -971,20 +978,23 @@ function renderClothes() {
         description.textContent = cloth.description;
         info.appendChild(description);
       }
+      const cardActions = document.createElement("div");
+      cardActions.className = "cloth-card-actions";
       const editButton = document.createElement("button");
       editButton.type = "button";
       editButton.className = "edit-cloth-btn";
       editButton.dataset.editCloth = cloth.id;
       editButton.textContent = "Modifier";
       editButton.title = "Modifier ce vêtement";
-      info.appendChild(editButton);
+      cardActions.appendChild(editButton);
 
       const cardDeleteButton = createDeleteButton(
         cloth.id,
         "Supprimer ce vêtement",
       );
       cardDeleteButton.className = "delete-btn delete-card-action";
-      info.appendChild(cardDeleteButton);
+      cardActions.appendChild(cardDeleteButton);
+      info.appendChild(cardActions);
       card.append(imageContainer, info);
       fragment.appendChild(card);
     });

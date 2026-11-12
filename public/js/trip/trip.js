@@ -33,16 +33,16 @@ const CATEGORY_LABELS = {
   autre: "Autres",
 };
 const CATEGORY_EMOJIS = {
-  haut: "👕",
-  "premiere-couche": "👕",
-  "seconde-couche": "🧥",
-  bas: "👖",
-  robe: "👗",
-  manteau: "🧥",
-  chaussures: "👟",
-  accessoires: "👜",
-  ensemble: "👘",
-  autre: "👕",
+  haut: "Vêtement",
+  "premiere-couche": "Vêtement",
+  "seconde-couche": "Vêtement",
+  bas: "Vêtement",
+  robe: "Vêtement",
+  manteau: "Vêtement",
+  chaussures: "Vêtement",
+  accessoires: "Vêtement",
+  ensemble: "Vêtement",
+  autre: "Vêtement",
 };
 
 const tripForm = document.getElementById("trip-form");
@@ -221,6 +221,8 @@ function renderSuitcase(plan) {
       if (piece.imageUrl) {
         const image = document.createElement("img");
         image.className = "trip-suitcase-thumb";
+        image.width = 56;
+        image.height = 74;
         image.src = piece.imageUrl;
         image.alt = "";
         image.loading = "lazy";
@@ -229,7 +231,7 @@ function renderSuitcase(plan) {
       } else {
         const thumb = document.createElement("div");
         thumb.className = "trip-suitcase-thumb";
-        thumb.textContent = CATEGORY_EMOJIS[piece.category] || "👕";
+        thumb.setAttribute("aria-label", CATEGORY_EMOJIS[piece.category] || "Vêtement");
         thumb.setAttribute("aria-hidden", "true");
         item.appendChild(thumb);
       }
@@ -287,7 +289,7 @@ function renderDays(plan) {
     const weather = document.createElement("span");
     weather.className = "trip-day-weather";
     weather.textContent = day.weather
-      ? `${day.weather.emoji || ""} ${day.weather.label || ""} · ${day.weather.min}–${day.weather.max} °C`
+      ? `${day.weather.label || ""} · ${day.weather.min}–${day.weather.max} °C`
       : "Météo indisponible";
     head.append(date, weather);
     card.appendChild(head);
@@ -303,7 +305,20 @@ function renderDays(plan) {
     for (const piece of pieces.slice(0, 6)) {
       const item = document.createElement("li");
       item.className = "trip-day-piece";
-      item.textContent = piece.name || piece.category || "Vêtement";
+      if (piece.imageUrl) {
+        const image = document.createElement("img");
+        image.width = 44;
+        image.height = 60;
+        image.src = piece.imageUrl;
+        image.alt = "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        item.appendChild(image);
+      }
+      const name = document.createElement("span");
+      name.className = "trip-day-piece-name";
+      name.textContent = piece.name || piece.category || "Vêtement";
+      item.appendChild(name);
       list.appendChild(item);
     }
     card.appendChild(list);

@@ -6,7 +6,7 @@
 <title>StyleAI - Votre dressing, version intelligente</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Feuilles de style organisées -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
@@ -38,11 +38,13 @@
         <a class="outline-btn" href="login.html">Se connecter</a>
       </div>
     </div>
-    <div class="wardrobe-art" aria-label="Illustration abstraite de vêtements">
-      <div class="garment gray"></div>
-      <div class="garment brown"></div>
-      <div class="garment navy"></div>
-      <div class="suggestion"><strong>Suggestion de l'IA</strong>Manteau gris + Pantalon bleu marine</div>
+    <div class="wardrobe-art">
+      <img src="assets/img/fashion-editorial-1600.webp" srcset="assets/img/fashion-editorial-960.webp 960w, assets/img/fashion-editorial-1600.webp 1600w" sizes="(max-width: 760px) 100vw, 55vw" alt="Portrait mode éditorial dans un manteau sombre, en lumière douce" width="1600" height="2396" fetchpriority="high">
+      <div class="suggestion"><strong>Le look du jour</strong>Une silhouette pensée pour vous</div>
+      <article class="garment-note">
+        <img src="assets/img/tailor-atelier-640.webp" srcset="assets/img/tailor-atelier-640.webp 640w, assets/img/tailor-atelier-1200.webp 1200w" sizes="120px" width="120" height="160" loading="lazy" alt="Détails d’un manteau dans un atelier de couture">
+        <div><span>Pièce du jour</span><strong>La sélection du dressing</strong></div>
+      </article>
     </div>
   </section>
   <section id="features" class="section">
@@ -112,5 +114,6 @@
     }
   });
 </script>
+  <script type="module" src="js/core/visual-effects.js"></script>
 </body>
 </html>

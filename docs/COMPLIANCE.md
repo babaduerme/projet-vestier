@@ -89,10 +89,18 @@ Cette matrice dit ce qui est fait, ce qui est partiel et ce qui manque encore.
 
 ## 8. Vérification actualisée
 
-- `npm test` : 100 tests réussis, 0 échec (vérifié le 11 novembre 2026).
+- `npm test` : 107 tests réussis, 0 échec (vérifié le 12 novembre 2026).
 - Le nom de ville météo mémorisé est affiché avec `textContent`, pas interprété
   comme du HTML.
 - Le parcours Firebase/Cloudinary dans un navigateur connecté et l'installation
   sur une machine vierge restent à vérifier manuellement.
 - Les modifications présentes dans l'espace de travail doivent être commités
   avant le dépôt final.
+
+## 9. Refonte visuelle StyleAI — 12 novembre 2026
+
+- La direction « Maison de couture nocturne » remplace la palette claire précédente sur la landing, l’authentification, le dressing, les tenues et le mode valise.
+- Les contrats JavaScript des fonctionnalités existantes sont vérifiés par `tests/redesign-contracts.test.mjs` ; la suite totale passe à 107 tests.
+- Les photos d’ambiance sont servies en WebP local depuis `public/assets/img/`, avec variantes responsives et attribution dans `docs/design-system.md`.
+- Les styles de mouvement réduit, navigation mobile, focus, images manquantes et placeholders de chargement sont prévus.
+- La connexion réelle, l’envoi photo vers Cloudinary et le parcours connecté doivent être essayés sur l’installation de présentation.
