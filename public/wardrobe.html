@@ -26,7 +26,17 @@
         <div id="user-info">
             <span id="user-display">Chargement...</span>
             <span id="user-email" class="visually-hidden"></span>
-            <button id="logout-btn" class="btn" type="button">Déconnexion</button>
+            <div class="account-settings">
+                <button id="account-settings-toggle" class="account-settings-toggle" type="button" aria-label="Paramètres du compte" aria-expanded="false" aria-haspopup="menu" aria-controls="account-settings-menu">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 13.5 1.1.9-1.5 2.6-1.4-.5a7.8 7.8 0 0 1-1.5.9l-.2 1.5h-3l-.3-1.5a7.8 7.8 0 0 1-1.5-.9l-1.4.5-1.5-2.6 1.1-.9a7 7 0 0 1 0-1.8l-1.1-.9 1.5-2.6 1.4.5a7.8 7.8 0 0 1 1.5-.9l.3-1.5h3l.2 1.5a7.8 7.8 0 0 1 1.5.9l1.4-.5 1.5 2.6-1.1.9a7 7 0 0 1 0 1.8Z" transform="translate(-1 -1)"/></svg>
+                </button>
+                <div id="account-settings-menu" class="account-settings-menu" role="menu" aria-label="Paramètres du compte" hidden>
+                    <button type="button" role="menuitem" data-account-action="logout">Déconnexion</button>
+                    <button type="button" role="menuitem" data-account-action="email">Modifier mon email</button>
+                    <button type="button" role="menuitem" data-account-action="password">Modifier mon mot de passe</button>
+                    <button type="button" role="menuitem" data-account-action="delete">Supprimer mon compte</button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -198,6 +208,21 @@
         </div>
     </div>
 
+    <div id="account-dialog" class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="account-dialog-title" aria-hidden="true" hidden>
+        <section class="account-dialog-card" tabindex="-1">
+            <button type="button" class="account-dialog-close" aria-label="Fermer">&times;</button>
+            <h2 id="account-dialog-title"></h2>
+            <p class="account-dialog-warning" hidden>Cette action est irréversible.</p>
+            <form id="account-action-form" novalidate>
+                <div id="account-form-fields"></div>
+                <p id="account-dialog-message" class="account-dialog-message" role="status" aria-live="polite"></p>
+                <div class="account-dialog-actions">
+                    <button type="button" class="btn btn-secondary" data-dialog-cancel>Annuler</button>
+                    <button type="submit" class="btn btn-primary" id="account-dialog-submit"></button>
+                </div>
+            </form>
+        </section>
+    </div>
     <script type="module" src="js/wardrobe/wardrobe.js"></script>
   <script type="module" src="js/core/visual-effects.js"></script>
 </body>

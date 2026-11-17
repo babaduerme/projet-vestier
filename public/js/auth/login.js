@@ -13,6 +13,13 @@ const signupForm = document.getElementById("signup-form");
 const errorDiv = document.getElementById("error-message");
 const tabs = document.querySelectorAll(".tab");
 
+const logoutMessage = sessionStorage.getItem("styleai:logout-message");
+if (logoutMessage && errorDiv) {
+  errorDiv.style.display = "block";
+  errorDiv.textContent = logoutMessage;
+  sessionStorage.removeItem("styleai:logout-message");
+}
+
 // Redirige vers la garde-robe si l'utilisateur est déjà connecté
 onAuthStateChanged(auth, (user) => {
   if (user) window.location.href = "wardrobe.html";

@@ -1,20 +1,7 @@
 import { auth } from "../core/config.js";
-import {
-  onAuthStateChanged,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-
-/**
- * Déconnecte l'utilisateur et redirige vers la page de connexion.
- */
-export async function logout() {
-  try {
-    await signOut(auth);
-    window.location.href = "login.html";
-  } catch (error) {
-    console.error("Erreur lors de la déconnexion :", error);
-  }
-}
+import { setupAccountSettings, startInactivityMonitor, logout } from "./account-settings.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+export { logout };
 
 /**
  * Normalise et harmonise la barre de navigation sur toutes les pages connectées.
@@ -47,12 +34,7 @@ export function setupNavbar(activePage) {
     }
   });
 
-  // Branchement du bouton déconnexion s'il existe
-  const logoutBtn = document.getElementById("logout-btn");
-  if (logoutBtn && !logoutBtn.dataset.bound) {
-    logoutBtn.dataset.bound = "true";
-    logoutBtn.addEventListener("click", logout);
-  }
+  setupAccountSettings();
 }
 
 /**
@@ -65,8 +47,29 @@ export function setupNavbar(activePage) {
 export function initAuth(onAuthenticated, redirectUrl = "login.html") {
   setupNavbar();
 
+  const userDisplay = document.getElementById("user-display");
+  const showAuthError = (message) => {
+    if (userDisplay) userDisplay.textContent = message;
+    const userInfo = document.getElementById("user-info");
+    if (userInfo && !document.getElementById("auth-retry-btn")) {
+      const retry = document.createElement("button");
+      retry.id = "auth-retry-btn";
+      retry.className = "btn";
+      retry.type = "button";
+      retry.textContent = "Réessayer";
+      retry.addEventListener("click", () => window.location.reload());
+      userInfo.append(retry);
+    }
+  };
+  const authTimeout = window.setTimeout(() => {
+    showAuthError("La vérification de la session prend trop de temps.");
+  }, 10000);
+
   const unsubscribe = onAuthStateChanged(auth, (user) => {
+    window.clearTimeout(authTimeout);
+    document.getElementById("auth-retry-btn")?.remove();
     if (user) {
+      startInactivityMonitor(user);
       const userEmailSpan = document.getElementById("user-email");
       if (userEmailSpan) {
         userEmailSpan.textContent = user.email || "";
@@ -83,10 +86,15 @@ export function initAuth(onAuthenticated, redirectUrl = "login.html") {
         onAuthenticated(user);
       }
     } else {
+      startInactivityMonitor(null);
       if (redirectUrl) {
         window.location.href = redirectUrl;
       }
     }
+  }, (error) => {
+    window.clearTimeout(authTimeout);
+    console.error("[Auth] Vérification de session impossible :", error);
+    showAuthError("Impossible de vérifier la session.");
   });
 
   return unsubscribe;

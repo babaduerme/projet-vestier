@@ -92,11 +92,22 @@
 .outfits-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
   gap: 1rem;
 }
 .outfit-card {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 0.75rem;
   min-width: 0;
   padding: 1rem;
+}
+.outfit-card > .edit-outfit-btn,
+.outfit-card > .retry-card-btn {
+  align-self: stretch;
+  margin: auto 0 0;
 }
 .piece-thumb {
   display: block;
@@ -200,16 +211,18 @@
 .day-card-header {
   display: flex;
   min-height: 42px;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.5rem;
 }
 .day-style-name {
+  min-width: 0;
   white-space: nowrap;
 }
 .today-tag {
   flex: 0 0 auto;
-  margin-left: 0.25rem;
+  margin-left: 0;
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--ui-clay);
   border-radius: 2px;
@@ -271,6 +284,7 @@
 }
 .outfit-pieces {
   display: grid;
+  flex: 1 0 auto;
   grid-template-columns: 1fr;
   gap: 0.9rem;
 }

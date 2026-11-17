@@ -1,6 +1,10 @@
 import { db } from "../core/config.js";
 import { initAuth } from "../auth/auth.js";
-import { escapeHtml, showToast } from "../core/ui-utils.js";
+import {
+  confirmDeletion,
+  escapeHtml,
+  showToast,
+} from "../core/ui-utils.js";
 import { validateOutfitOnServer } from "../core/api-client.js";
 import {
   GARMENT_TYPES,
@@ -650,7 +654,7 @@ function renderSavedWeeks() {
   }
 }
 
-savedWeekList?.addEventListener("click", (event) => {
+savedWeekList?.addEventListener("click", async (event) => {
   const openButton = event.target.closest("[data-open-week]");
   const deleteButton = event.target.closest("[data-delete-week]");
   if (openButton) {
@@ -668,10 +672,18 @@ savedWeekList?.addEventListener("click", (event) => {
   const savedWeek = savedWeeks.find((week) => week.id === deleteButton.dataset.deleteWeek);
   if (!savedWeek) return;
   if (savedWeek.id === "local-cache") {
+    const confirmed = await confirmDeletion("localWeek", {
+      name: savedWeek.title || "Ma semaine",
+    });
+    if (!confirmed) return;
     savedWeeks = savedWeeks.filter((week) => week.id !== savedWeek.id);
     renderSavedWeeks();
     return;
   }
+  const confirmed = await confirmDeletion("savedWeek", {
+    name: savedWeek.title || "Ma semaine",
+  });
+  if (!confirmed) return;
   void deleteDoc(doc(db, `users/${currentUser.uid}/outfits`, savedWeek.id)).then(() => {
     if (activeSavedWeekId === savedWeek.id) activeSavedWeekId = null;
   }).catch((error) => {

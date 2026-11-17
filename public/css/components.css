@@ -102,6 +102,53 @@ button:disabled {
 #user-info #logout-btn {
   min-height: 40px;
 }
+.account-settings { position: relative; }
+.account-settings-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--ui-line); background: transparent; color: var(--ui-clay); cursor: pointer; transition: transform .25s var(--ease), background .25s var(--ease); }
+.account-settings-toggle:hover { transform: rotate(18deg); background: var(--ui-card-raised); }
+.account-settings-toggle[aria-expanded="true"] { background: var(--ui-card-raised); box-shadow: 0 0 0 1px var(--ui-clay); }
+.account-settings-toggle svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.account-settings-menu { position: absolute; z-index: 100; top: calc(100% + .5rem); right: 0; width: min(16rem, calc(100vw - 2rem)); padding: .35rem; border: 1px solid var(--ui-line); background: var(--ui-card); box-shadow: 0 12px 32px #0008; }
+.account-settings-menu[hidden], .account-dialog[hidden] { display: none; }
+.account-settings-menu [role="menuitem"] { display: block; width: 100%; min-height: 44px; padding: .65rem .8rem; border: 0; background: transparent; color: var(--ui-ink); text-align: left; cursor: pointer; }
+.account-settings-menu [role="menuitem"]:hover, .account-settings-menu [role="menuitem"]:focus-visible { background: var(--ui-card-raised); color: var(--ui-clay); }
+.account-settings-menu [data-account-action="delete"] { color: #ff9ca3; }
+.account-dialog { position: fixed; z-index: 1100; inset: 0; display: grid; place-items: center; padding: 1rem; background: #000b; backdrop-filter: blur(6px); }
+.account-dialog-card { position: relative; width: min(100%, 480px); max-height: min(90dvh, 760px); overflow: auto; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--ui-line); background: var(--ui-card); color: var(--ui-ink); }
+.account-dialog-card h2 { padding-right: 2.5rem; }
+.account-dialog-close { position: absolute; top: .65rem; right: .65rem; width: 44px; height: 44px; border: 0; background: transparent; color: var(--ui-ink); font-size: 1.6rem; cursor: pointer; }
+.account-dialog-field { display: grid; gap: .35rem; margin: 1rem 0; }
+.account-dialog-field input { width: 100%; }
+.account-password-wrap { display: flex; align-items: center; gap: .4rem; }
+.account-password-wrap input { min-width: 0; flex: 1; }
+.account-password-toggle { min-height: 44px; padding: .4rem .6rem; border: 1px solid var(--ui-line); background: transparent; color: var(--ui-clay); cursor: pointer; }
+.account-dialog-warning { padding: .75rem; border-left: 3px solid #d44852; background: #8c2f3929; color: #ffb5bb; }
+.account-dialog--danger .account-dialog-card { border-color: #a73740; }
+.account-dialog--danger #account-dialog-submit { border-color: #a73740; background: #a73740; color: white; }
+.account-dialog-message { min-height: 1.5em; color: var(--ui-muted); }
+.account-dialog-message.is-error { color: #ff9ca3; }
+.account-dialog-message.is-success { color: #acd3b6; }
+.deletion-dialog {
+  width: min(100% - 2rem, 460px);
+  max-width: 460px;
+  padding: 0;
+  border: 1px solid var(--ui-line);
+  background: var(--ui-card);
+  color: var(--ui-ink);
+  box-shadow: 0 24px 80px #0009;
+}
+.deletion-dialog::backdrop { background: #000b; backdrop-filter: blur(5px); }
+.deletion-dialog-card { padding: clamp(1.25rem, 4vw, 2rem); }
+.deletion-dialog-kicker { margin: 0 0 .5rem; color: var(--ui-clay); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; }
+.deletion-dialog-card h2 { margin: 0 2rem .75rem 0; font: 500 1.8rem/1.1 var(--font-display); }
+.deletion-dialog-card > p:not(.deletion-dialog-kicker) { color: var(--ui-muted); }
+.deletion-dialog-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1.5rem; }
+.deletion-dialog-actions button { min-height: 44px; padding: .6rem 1rem; border: 1px solid var(--ui-line); background: transparent; color: var(--ui-ink); cursor: pointer; }
+.deletion-dialog-actions .deletion-confirm-btn { border-color: var(--ui-danger); background: var(--ui-danger); color: var(--ui-ink); }
+.inactivity-warning:not([hidden]) { z-index: 1200; }
+.inactivity-warning .account-dialog-card { display: grid; gap: .75rem; }
+.inactivity-warning #stay-connected { justify-self: end; }
+.account-dialog-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1rem; }
+@media (max-width: 760px) { .account-dialog { align-items: end; padding: 0; } .account-dialog-card { width: 100%; max-height: 90dvh; border-bottom: 0; border-right: 0; border-left: 0; padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); } }
 .btn-primary,
 .btn-gold,
 .submit-btn {

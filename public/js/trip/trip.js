@@ -2,7 +2,7 @@
 // sauvegarde Firestore et rendu accessible.
 import { db } from "../core/config.js";
 import { initAuth } from "../auth/auth.js";
-import { showToast } from "../core/ui-utils.js";
+import { confirmDeletion, showToast } from "../core/ui-utils.js";
 import { GARMENT_TYPES, migrateGarment } from "../shared/outfit-matcher.js";
 import { fetchWeatherForDateRange, geocodeCity } from "../shared/weather/weather.js";
 import { planTrip } from "./trip-planner.js";
@@ -597,9 +597,10 @@ function openSavedTrip(trip) {
 
 async function removeTrip(trip) {
   if (!currentUser) return;
-  if (!window.confirm(`Supprimer la valise « ${trip.destination || "sans destination"} » ?`)) {
-    return;
-  }
+  const confirmed = await confirmDeletion("trip", {
+    name: trip.destination || "Sans destination",
+  });
+  if (!confirmed) return;
   try {
     await deleteDoc(doc(db, `users/${currentUser.uid}/trips`, trip.id));
     if (currentTripId === trip.id) clearResults();

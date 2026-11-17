@@ -129,7 +129,7 @@
     ),
     linear-gradient(0deg, rgba(11, 11, 12, 0.62), transparent 40%);
 }
-.wardrobe-art img {
+.wardrobe-art > img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -178,11 +178,25 @@
   padding: 2rem;
   background: var(--ui-card);
 }
+.feature-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.feature-card-heading h3 {
+  margin: 0;
+}
 .feature-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 24px;
   width: 24px;
   height: 24px;
-  margin-bottom: 1.5rem;
   border: 1px solid var(--ui-clay);
+  color: var(--ui-clay);
+  font: 500 0.65rem/1 var(--font-body);
+  letter-spacing: 0.02em;
 }
 .feature-card h3,
 .step h3 {

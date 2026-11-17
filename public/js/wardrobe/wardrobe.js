@@ -4,7 +4,8 @@ import {
   CLOUDINARY_UPLOAD_PRESET,
 } from "../core/config.js";
 import { initAuth } from "../auth/auth.js";
-import { showToast } from "../core/ui-utils.js";
+import { buildClothesQuery } from "./wardrobe-query.js";
+import { confirmDeletion, showToast } from "../core/ui-utils.js";
 import { extractDominantColors } from "./color-analysis.js";
 import {
   classifyGarment,
@@ -33,6 +34,7 @@ import {
   setDoc,
   startAfter,
   updateDoc,
+  where,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 // Éléments DOM
@@ -68,9 +70,11 @@ let selectedFile = null;
 let previewObjectUrl = null;
 let analysisVersion = 0;
 let stopClothesListener = null;
+let stopCategoryListener = null;
 let clothesCursor = null;
 let hasMoreClothes = false;
 let clothesPageSize = 6;
+let categoryClothes = [];
 let editingClothId = null;
 let editingClothImageUrl = null;
 let cameraStream = null;
@@ -115,8 +119,12 @@ function isValidClassification(result) {
 // Initialisation de l'authentification avec redirection automatique
 initAuth((user) => {
   stopClothesListener?.();
+  stopCategoryListener?.();
   currentUser = user;
+  allClothes = [];
+  categoryClothes = [];
   loadClothes();
+  if (currentFilter !== "tous") loadCategoryClothes(currentFilter);
 });
 
 // Gestion des motifs (Uni / Motif)
@@ -662,6 +670,32 @@ addClothForm?.addEventListener("submit", async (e) => {
 });
 
 // Chargement des vêtements Firestore
+function mapClothesSnapshot(snapshot) {
+  return snapshot.docs.map((clothDoc) => {
+    const raw = { id: clothDoc.id, ...clothDoc.data() };
+    const migrated = migrateGarment(raw);
+    if (
+      migrated &&
+      ["type", "slot", "colors", "colorConfidence", "isContradictory"].some(
+        (field) => raw[field] !== migrated[field],
+      )
+    ) {
+      void setDoc(
+        doc(db, `users/${currentUser.uid}/clothes`, clothDoc.id),
+        {
+          type: migrated.type,
+          slot: migrated.slot,
+          colors: migrated.colors,
+          colorConfidence: migrated.colorConfidence,
+          isContradictory: migrated.isContradictory,
+        },
+        { merge: true },
+      );
+    }
+    return migrated;
+  });
+}
+
 function loadClothes() {
   const clothesRef = collection(db, `users/${currentUser.uid}/clothes`);
   clothesPageSize = getClothesPageSize();
@@ -676,31 +710,9 @@ function loadClothes() {
   hasMoreClothes = false;
   if (loadMoreBtn) loadMoreBtn.hidden = true;
   stopClothesListener = onSnapshot(
-    query(clothesRef, limit(clothesPageSize)),
+    buildClothesQuery(clothesRef, "tous", clothesPageSize, { query, limit, where }),
     (snapshot) => {
-      allClothes = snapshot.docs.map((clothDoc) => {
-        const raw = { id: clothDoc.id, ...clothDoc.data() };
-        const migrated = migrateGarment(raw);
-        if (
-          migrated &&
-          ["type", "slot", "colors", "colorConfidence", "isContradictory"].some(
-            (field) => raw[field] !== migrated[field],
-          )
-        ) {
-          void setDoc(
-            doc(db, `users/${currentUser.uid}/clothes`, clothDoc.id),
-            {
-              type: migrated.type,
-              slot: migrated.slot,
-              colors: migrated.colors,
-              colorConfidence: migrated.colorConfidence,
-              isContradictory: migrated.isContradictory,
-            },
-            { merge: true },
-          );
-        }
-        return migrated;
-      });
+      allClothes = mapClothesSnapshot(snapshot);
       allClothes.sort((a, b) => getCreatedAtMillis(b) - getCreatedAtMillis(a));
       clothesCursor = snapshot.docs.at(-1) || null;
       hasMoreClothes = snapshot.size === clothesPageSize;
@@ -718,8 +730,36 @@ function loadClothes() {
   );
 }
 
+function loadCategoryClothes(category) {
+  if (!currentUser) return;
+  stopCategoryListener?.();
+  categoryClothes = [];
+  clothesGrid.style.display = "none";
+  emptyState.style.display = "block";
+  emptyState.querySelector("h2").textContent = "Chargement de la catégorie...";
+  emptyState.querySelector("p").textContent = "Récupération de tes vêtements en cours.";
+  if (loadMoreBtn) loadMoreBtn.hidden = true;
+
+  const clothesRef = collection(db, `users/${currentUser.uid}/clothes`);
+  const categoryQuery = buildClothesQuery(clothesRef, category, clothesPageSize, { query, limit, where });
+  stopCategoryListener = onSnapshot(
+    categoryQuery,
+    (snapshot) => {
+      categoryClothes = mapClothesSnapshot(snapshot);
+      categoryClothes.sort((a, b) => getCreatedAtMillis(b) - getCreatedAtMillis(a));
+      renderClothes();
+    },
+    (error) => {
+      console.error("Erreur chargement catégorie Firestore :", error);
+      emptyState.querySelector("h2").textContent = "Impossible de charger cette catégorie";
+      emptyState.querySelector("p").textContent = "Vérifie ta connexion puis réessaie.";
+      showToast("Erreur lors du chargement de la catégorie", "error");
+    },
+  );
+}
+
 async function loadMoreClothes() {
-  if (!currentUser || !clothesCursor || !hasMoreClothes) return;
+  if (!currentUser || currentFilter !== "tous" || !clothesCursor || !hasMoreClothes) return;
   loadMoreBtn?.setAttribute("aria-busy", "true");
   try {
     const clothesRef = collection(db, `users/${currentUser.uid}/clothes`);
@@ -762,7 +802,9 @@ function getCreatedAtMillis(cloth) {
 
 // Suppression d'un vêtement
 window.deleteCloth = async (clothId) => {
-  if (!confirm("Voulez-vous vraiment supprimer ce vêtement ?")) return;
+  const cloth = categoryClothes.find((item) => item.id === clothId) ||
+    allClothes.find((item) => item.id === clothId);
+  if (!(await confirmDeletion("garment", cloth))) return;
 
   try {
     await deleteDoc(doc(db, `users/${currentUser.uid}/clothes`, clothId));
@@ -893,10 +935,11 @@ async function updateWardrobeSuggestion() {
 // Rendu de la grille de vêtements
 function renderClothes() {
   updateWardrobeSuggestion();
+  const clothesForFilter = currentFilter === "tous" ? allClothes : categoryClothes;
   const filteredClothes =
     currentFilter === "tous"
-      ? allClothes
-      : allClothes.filter((c) => c.category === currentFilter);
+      ? clothesForFilter
+      : clothesForFilter.filter((c) => c.category === currentFilter);
 
   clothCountSpan.textContent = `(${filteredClothes.length})`;
 
@@ -1020,6 +1063,14 @@ filterPills.forEach((pill) => {
     filterPills.forEach((p) => p.classList.remove("active"));
     pill.classList.add("active");
     currentFilter = pill.dataset.category;
-    renderClothes();
+    if (currentFilter === "tous") {
+      stopCategoryListener?.();
+      stopCategoryListener = null;
+      categoryClothes = [];
+      if (loadMoreBtn) loadMoreBtn.hidden = !hasMoreClothes;
+      renderClothes();
+    } else {
+      loadCategoryClothes(currentFilter);
+    }
   });
 });
