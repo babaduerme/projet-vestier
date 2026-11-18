@@ -125,13 +125,15 @@ les défauts assumés restent listés et hiérarchisés.
 - **Correction** : un seul bouton, ajout du bouton « Modifier ».
 - **Statut** : corrigé.
 
-### M4. Modale de confirmation de suppression inutilisée — ouvert
+### M4. Modale de confirmation de suppression inutilisée — corrigé
 
-- **Constat** : le HTML contient `#delete-confirm-modal`, mais `deleteCloth`
-  utilise `window.confirm`.
-- **Risque** : incohérence d'interface, code mort.
-- **Action** : soit brancher la modale, soit retirer le HTML. Faible priorité.
-- **Statut** : ouvert.
+- **Constat** : l'ancien HTML et ses styles étaient inutilisés après le passage
+  aux confirmations contextualisées.
+- **Correction** : retrait du code mort ; vêtements, semaines et valises utilisent
+  maintenant la modale native `<dialog>` stylée par le site, avec un message
+  adapté au type d'élément.
+- **Statut** : corrigé ; les textes sont couverts par tests, l'interaction dans
+  un navigateur réel reste à valider.
 
 ### M5. `functions/index.js` squelette — corrigé
 
@@ -164,12 +166,10 @@ les défauts assumés restent listés et hiérarchisés.
 
 ## 3. Défauts bas
 
-- `scorePieceForWeather` et `isOuterwear` ne sont plus appelés après le
-  changement de règle météo. Code mort à supprimer ou à réutiliser.
 - `styleEngine.js` n'est pas branché au générateur actif ; il est testé comme
   module de référence. À terme, factoriser avec `outfits.js`.
-- La modale `#delete-confirm-modal` existe mais `deleteCloth` utilise encore
-  `window.confirm`. Faible priorité.
+- Les parcours des modales de suppression doivent encore être vérifiés au
+  clavier dans un navigateur réel.
 - Le README mentionne Firebase Hosting Emulator comme variante statique ; l'API
   n'y est pas disponible. C'est explicite.
 

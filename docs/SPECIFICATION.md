@@ -2,10 +2,10 @@
 
 - **Projet** : StyleAI, garde-robe personnelle assistée par IA.
 - **Cours** : 3A DW — Coder à l'ère de l'IA, projet fil rouge.
-- **Date de cette version** : 10/11/2026.
-- **Source** : cahier des charges `5ef268df-bf15-4107-89a2-eefa82ad70aa.docx`
-  (document de cadrage du module).
-- **Statut** : version de travail alignée sur le cahier des charges.
+- **Date de cette version** : 17/11/2026.
+- **Source** : `Projet_fil_rouge_consignes.docx`, cahier des charges fourni pour
+  le projet fil rouge 3A DW — Coder à l'ère de l'IA.
+- **Statut** : spécification du projet comparée au cahier des charges fourni.
 
 ## 1. Problème et public
 

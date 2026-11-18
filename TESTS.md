@@ -91,9 +91,11 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
 
 ### Cas 8 — Suppression
 
-- **Action** : cliquer sur la corbeille, confirmer.
+- **Action** : cliquer sur la corbeille ; vérifier que la modale intégrée nomme
+  le vêtement et sa catégorie, puis confirmer ou annuler.
 - **Attendu** : document supprimé, carte retirée, toast.
-- **Résultat** : non exécuté — navigateur/Firebase requis.
+- **Résultat** : message contextualisé automatisé ; suppression Firestore et
+  interaction de la modale non exécutées dans un navigateur connecté.
 
 ### Cas 9 — Couche chaude obligatoire
 
@@ -249,14 +251,37 @@ lorsqu'ils n'ont pas été joués dans cet environnement.
   pantalon cargo sans enfreindre les règles de base et de couche chaude.
 - **Résultat** : Pass (test déterministe du générateur).
 
+### Cas 27 — Filtre de catégorie sur toute la garde-robe
+
+- **Action** : sélectionner une catégorie dont les vêtements ne figurent pas
+  dans les six premières pièces de la vue « Tous ».
+- **Attendu** : la catégorie interroge toutes ses pièces directement, sans
+  exiger de charger les pages globales précédentes ; « Tous » conserve sa
+  pagination.
+- **Résultat** : Pass (tests de construction de requête dans
+  `tests/wardrobe-query.test.mjs`). Le comportement avec le projet Firestore réel
+  reste à vérifier en navigateur.
+
+### Cas 28 — Confirmation de suppression contextualisée
+
+- **Action** : préparer une confirmation pour un vêtement, une semaine, une
+  valise et un compte.
+- **Attendu** : chaque message nomme le bon type d'élément et, si disponible,
+  son nom ; vêtements, semaines et valises utilisent une modale du site plutôt
+  qu'une boîte native du navigateur.
+- **Résultat** : Pass pour les messages (`tests/deletion-messages.test.mjs`).
+  Interaction clavier et rendu de la modale à confirmer manuellement.
+
 ## Commandes et résultats
 
 ```text
 npm test
-ℹ tests 100
-ℹ pass 100
+ℹ tests 111
+ℹ pass 111
 ℹ fail 0
 ```
+
+Résultat relancé le 17 novembre 2026 après les ajustements de conformité.
 
 ## Ce qui n'est pas couvert
 
